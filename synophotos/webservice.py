@@ -50,7 +50,7 @@ class SynoResponse:
 	error_msg: str = field( default=None )
 
 
-	def __post_init__( self ):
+	def __attrs_post_init__( self ):
 		self.status_code = self.response.status_code
 		try:
 			json = self.response.json()
@@ -81,6 +81,7 @@ class SynoResponse:
 
 @define
 class SynoSession:
+
 	account: str = field( default=None )
 	device_id: str = field( default=None )
 	ik_message: str = field( default=None )
@@ -91,7 +92,7 @@ class SynoSession:
 	error_code: int = field( default=CODE_SUCCESS )
 	error_msg: Optional[str] = field( default=None )
 
-	updated_at: Optional[datetime] = field( default=None )
+	updated_at: Optional[str] = field( default=None )
 
 	def is_valid( self ) -> bool:
 		if self.error_code == CODE_SUCCESS:
@@ -184,8 +185,8 @@ class SynoWebService:
 
 		save_session = True  # todo: make this configurable?
 		if save_session:
-			ctx.cfg.sessions[ctx.cfg.config.profile] = self.session
-			ctx.cfg.save_sessions()
+			ctx.config.sessions[ctx.config.config.profile] = self.session
+			ctx.config.save_sessions()
 
 		return self.session
 

@@ -1,17 +1,15 @@
 
-# Command Line Interface
+# Synophotos CLI
 
-The Command Line Interface (CLI) is an attempt to enable remote control of certain function from a terminal. As a
-proof of concept a first shot has been done for Synology Photos.
+Synophotos Command Line Interface (CLI) is an attempt to enable remote control of certain functions in Synology Photos from a terminal.
 
 ## Installation and Configuration
 
-The CLI is currently not available via the package of synology-api published to pypi. For this reason the only way
-for an installation is via git clone + pip:
+The CLI is currently not yet available. For this reason the only way for an installation is via git clone + pip:
 
 ```bash
-git clone --branch synology-api-cli https://github.com/fortysix2ahead/synology-api.git
-cd synology-api
+git clone https://github.com/fortysix2ahead/synophotos
+cd synophotos
 pip -m venv venv
 source ./venv/bin/activate
 pip install -e .
@@ -20,31 +18,26 @@ pip install -e .
 This will create executable scripts within the `venv\bin` folder. For now, only `synophotos` is supported
 (other commands might come later).
 
-Next thing to do is to create two configuration files, `config.json` and `profiles.json`. Both are located in
-`$USER_CONFIGURATION_FOLDER/synocli/`. USER_CONFIGURATION_FOLDER is located in `~/.config` in Linux,
+Next thing to do is to create two configuration files, `config.yaml` and `profiles.yaml`. Both are located in
+`$USER_CONFIGURATION_FOLDER/synophotos/`. USER_CONFIGURATION_FOLDER is located in `~/.config` in Linux,
 in `~/Library/Application Support/` in Mac OS X and in `~\AppData\Roaming\` in Windows.
 
-`profiles.json` contains the URLs and credentials of (multiple) Synology stations:
-```json
-{
-  "user_one": {
-    "url": "https://my.synology.nas.com",
-    "account": "user1",
-    "password": "password1"
-  },
-  "user_two": {
-    "url": "https://my.synology.nas.com",
-    "account": "user2",
-    "password": "password2"
-  }
-}
+`profiles.yaml` contains the URLs and credentials of (multiple) Synology stations:
+```yaml
+user_one:
+  url: "https://my.synology.nas.com"
+  account: "user1"
+  password: "password1"
+
+user_two:
+  url: "https://my.synology.nas.com"
+  account: "user2"
+  password: "password2"
 ```
 
-`config.json` simply contains the currently active profile which is used when commands are executed in a terminal:
-```json
-{
-  "profile": "user_one"
-}
+`config.yaml` simply contains the currently active profile which is used when commands are executed in a terminal:
+```yaml
+profile: "user_one"
 ```
 
 ## Usage
@@ -54,30 +47,23 @@ The currently available commands and options are:
 ```
 Usage: synophotos [OPTIONS] COMMAND [ARGS]...
 
-  photos group
-
 Options:
-  --help  Show this message and exit.
+  -d, --debug  Print debug information
+  --help       Show this message and exit.
 
 Commands:
-  count-albums      counts the number of albums
-  count-folders     counts the number of folders
-  count-items       counts the number of items
-  create-album      creates a new album
-  create-folder     creates a new folder
-  get-root-folder   gets the root folder
-  id                helps finding ids of various things
-  list-albums       lists albums
-  list-folders      lists folders
-  list-items        lists items
-  list-user-groups  lists users and groups
-  profile           shows the name of the currently active profile
-  share-album       shares an album
-  share-folder      creates an album from a folder and shares it
-  unshare-album     unshares an album
+  count    counts various things
+  create   creates albums and folders
+  id       helps finding ids of various things
+  list     lists objects
+  profile  shows the name of the currently active profile
+  root     gets the id of the root folder
+  search   search for various things
+  share    shares an album or folder
+  unshare  unshares an album
 ```
 
-## Identifiers
+## Identifiers (ids)
 
 For now, all commands are working based on ids. What's an id? Each album, photo, user etc. in Synology Photos
 has a unique id. Synology uses numbers for working with things, so it's essential to know which item has which
@@ -86,15 +72,15 @@ id number.
 The most simple command is
 
 ```bash
-synophotos get-root-folder
+synophotos root
 3
 ```
 
-This simply fetches the root folder and returns its id, in this case `3`. We can now use id to see if the root folder
+This simply fetches the root folder and returns its id, in this case `3`. We can now use the id to see if the root folder
 has children:
 
 ```bash
-synophotos list-items 3
+synophotos list 3
   id   │ filename      │ filesize │ folder_id │ owner_user_id
 ╶──────┼───────────────┼──────────┼───────────┼───────────────╴
   1817 │ 'image_1.jpg' │ 1122567  │ 3         │ 2
