@@ -37,15 +37,17 @@ class Item:
 
 @define
 class Folder:
+
 	name: str = field( default=None )
-	id: int = field( default=0 )
-	parent: int = field( default=0 )
-	owner_user_id: int = field( default=0 )
-	passphrase: str = field( default=None )
+	id: int = field( default=None )
+	parent: int = field( default=None )
+	owner_user_id: int = field( default=None )
+	passphrase: Optional[str] = field( default=None )
 	shared: bool = field( default=False )
 	sort_by: str = field( default=None )
 	sort_direction: str = field( default=None )
-	additional: List[str] = field( default=None )
+
+	additional: Dict[str, Dict[str, bool]] = field( factory=dict )
 
 	# additional fields
 	# items: List[Item] = field( init=False, default_factory=list )

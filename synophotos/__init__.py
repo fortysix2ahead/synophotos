@@ -85,7 +85,7 @@ class ApplicationContext:
 		try:
 			return CONVERTER.loads( CFG_FS.readtext( filename ), cls )
 		except ResourceNotFound:
-			log.error( f'unable to read file {filename}', exc_info=True )
+			log.debug( f'unable to read file {filename}', exc_info=True )
 			if exit_on_fail:
 				sysexit( -1 )
 			return {}

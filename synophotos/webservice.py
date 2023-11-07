@@ -5,6 +5,7 @@ from sys import exit as sysexit
 from typing import Any, ClassVar, Dict, List, Optional, Type, TypeVar
 
 from attrs import define, field
+from cattrs import Converter
 from requests import get, JSONDecodeError, post, PreparedRequest, Response
 from rich.pretty import pretty_repr
 from rich.prompt import Prompt
@@ -17,6 +18,7 @@ log = getLogger( __name__ )
 
 T = TypeVar( 'T' )
 
+CONVERTER = Converter()
 SESSION_TIMEOUT = timedelta( days=30 )
 
 class WebService( Protocol ):
@@ -49,7 +51,6 @@ class SynoResponse:
 	error_code: int = field( default=None )
 	error_msg: str = field( default=None )
 
-
 	def __attrs_post_init__( self ):
 		self.status_code = self.response.status_code
 		try:
@@ -71,7 +72,7 @@ class SynoResponse:
 
 	def as_obj( self, cls: Type[T] ) -> T:
 		first_key, first_value = next( iter( self.data.items() ) )
-		return SynoResponse.factory.load( first_value, cls )
+		return CONVERTER.structure( first_value, cls )
 
 	def request( self ) -> PreparedRequest:
 		return self.response.request
@@ -94,14 +95,15 @@ class SynoSession:
 
 	updated_at: Optional[str] = field( default=None )
 
+	@property
+	def updated( self ) -> datetime:
+		return datetime.fromisoformat( self.updated_at )
+
 	def is_valid( self ) -> bool:
 		if self.error_code == CODE_SUCCESS:
-			if self.updated_at and ( datetime.utcnow() - self.updated_at < SESSION_TIMEOUT ):
+			if self.updated_at and ( datetime.utcnow() - self.updated < SESSION_TIMEOUT ):
 				return True
 		return False
-
-	def as_dict( self ) -> Dict:
-		return FACTORY.dump( self, SynoSession )
 
 @define
 class SynoWebService:
@@ -126,7 +128,7 @@ class SynoWebService:
 		if self.session_id:
 			template = { **template, '_sid': self.session_id }
 
-		params = { **template, **kwargs }  # create variable making debuggin easier
+		params = { **template, **kwargs }  # create variable making debugging easier
 
 		log.debug( f'GET {self.get_url( url )}, parameters:' )
 		log.debug( pretty_repr( params ) )
@@ -184,9 +186,9 @@ class SynoWebService:
 				sysexit( -1 )
 
 		save_session = True  # todo: make this configurable?
-		if save_session:
-			ctx.config.sessions[ctx.config.config.profile] = self.session
-			ctx.config.save_sessions()
+		#if save_session:
+		#	ctx.config.sessions[ctx.config.config.profile] = self.session
+		#	ctx.config.save_sessions()
 
 		return self.session
 
@@ -197,8 +199,6 @@ class SynoWebService:
 			syno_response = self.get( ENTRY_URL, LOGIN_PARAMS, account=self.account, passwd=self.password )
 
 		if syno_response.success:
-			session = FACTORY.load( syno_response.data, SynoSession )
-			session.updated_at = datetime.utcnow()
-			return session
+			return CONVERTER.structure_attrs_fromdict( { **syno_response.data, 'updated_at': datetime.utcnow().isoformat() }, SynoSession )
 		else:
-			return SynoSession( error_code=syno_response.error_code, error_msg=syno_response.error_msg )
+			return CONVERTER.structure_attrs_fromdict( { 'error_code': syno_response.error_code, 'error_msg': syno_response.error_msg }, SynoSession )

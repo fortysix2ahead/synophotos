@@ -23,10 +23,10 @@ def cli( ctx: Context, debug: bool = False ):
 	ctx.obj.service = synophotos
 
 	# attempt to log in
-#	if not synophotos.login( ctx.obj ):
-		# ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
-#		ctx.obj.console.print( f'error logging in' )
-#		sysexit( -1 )
+	if not synophotos.login( ctx.obj ):
+		#ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
+		ctx.obj.console.print( f'error logging in' )
+		sysexit( -1 )
 
 # create
 
