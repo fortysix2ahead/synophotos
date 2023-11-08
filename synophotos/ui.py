@@ -3,7 +3,7 @@ from typing import Any, List, Optional, Type
 
 from rich import box
 from rich.console import Console
-from rich.pretty import Pretty
+from rich.pretty import Pretty, pretty_repr
 from rich.style import Style
 from rich.table import Table
 
@@ -24,6 +24,14 @@ def print_error( msg: str ):
 	cs.print( f'[red]Error:[/red] {msg}' )
 
 #
+
+def table_for( cols: List, rows: List[List] ) -> Table:
+	table = Table( box=box.MINIMAL, show_header=True, show_footer=False )
+	[ table.add_column( c, header_style=blue ) for c in cols ]
+	for row in rows:
+		table.add_row( *[Pretty( r ) for r in row] )
+		# table.add_row( *[pretty_repr( r ) for r in row] )
+	return table
 
 def dataclass_table( instances: List, cls: Type = None ) -> Optional[Table]:
 	# determine fields to display

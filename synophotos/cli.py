@@ -6,7 +6,7 @@ from click import argument, Context, group, option, pass_context, pass_obj
 
 from synophotos import ApplicationContext
 from synophotos.photos import SynoPhotos
-from synophotos.ui import pprint as pp, print_error, print_obj
+from synophotos.ui import pprint as pp, print_error, print_obj, table_for
 
 log = getLogger( __name__ )
 
@@ -166,12 +166,12 @@ def payload( ctx: ApplicationContext, name: str ):
 	from inspect import getmembers
 	from sys import modules
 	members = [(k, v) for k, v in getmembers( modules['synophotos.parameters.photos'] ) if not k.startswith( '__' ) and isinstance( v, dict )]
+	members = sorted( members, key=lambda m: m[0] )
 
 	if name:
-		pp( next( (v for k, v in members if k.lower() == name.lower()), None ) )
-	else:
-		for k, v in sorted( members, key=lambda m: m[0] ):
-			print( k )
+		members = filter( lambda m: name.lower() in m[0].lower(), members )
+
+	pp( table_for( [ 'name', 'payload' ], [ [k, v] for k, v in members ] ) )
 
 @cli.command( help='prints version information' )
 @pass_obj
