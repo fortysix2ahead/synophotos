@@ -215,6 +215,11 @@ def identify( ctx: ApplicationContext, element: str, user: bool, group: bool, al
 def search( ctx: ApplicationContext, name: str ):
 	pp( synophotos.search( name ) )
 
+@cli.command( help='sync' )
+@pass_obj
+def sync( ctx: ApplicationContext ):
+	synophotos.sync()
+
 @cli.command( hidden=True, help='displays a selected payload (this is for development only)' )
 @argument( 'name', nargs=1, required=False )
 @pass_obj

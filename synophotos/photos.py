@@ -251,6 +251,11 @@ class SynoPhotos( SynoWebService ):
 	def create_folder( self, name: str, parent_id: int = 0 ) -> int:
 		return self.get( ENTRY_URL, {**CREATE_FOLDER, 'name': f'\"{name}\"', 'target_id': parent_id} )
 
+	# exprimental
+
+	def sync( self ):
+		pass
+
 	# helpers
 
 	def album( self, id: int ) -> Album:
