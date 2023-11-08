@@ -1,0 +1,11 @@
+
+site_name: Synophotos CLI - Documentation
+site_url: https://github.com/fortysix2ahead/synophotos
+
+nav:
+    - Home: index.md
+    - CLI Reference: cli.md
+
+theme: material
+markdown_extensions:
+    - mkdocs-click
