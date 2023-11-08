@@ -216,9 +216,13 @@ def search( ctx: ApplicationContext, name: str ):
 	pp( synophotos.search( name ) )
 
 @cli.command( help='sync' )
+@option( '-a', '--album', required=True, is_flag=True, help='sync a provided album' )
+@option( '-d', '--destination', required=True, is_flag=False, help='destination folder to sync to' )
+@argument( 'element', nargs=1, required=True )
 @pass_obj
-def sync( ctx: ApplicationContext ):
-	synophotos.sync()
+def sync( ctx: ApplicationContext, element: str, album: bool, destination: str ):
+	if album:
+		synophotos.sync( source_album=element, destination=destination )
 
 @cli.command( hidden=True, help='displays a selected payload (this is for development only)' )
 @argument( 'name', nargs=1, required=False )

@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from attrs import define, field
 from cattrs import Converter
 from cattrs.preconf.json import make_converter
+from fs.osfs import OSFS
 
 from synophotos.parameters.photos import ADD_ITEM_TO_ALBUM, BROWSE_ALBUM, BROWSE_ALBUM_ALL, BROWSE_FOLDER, BROWSE_ITEM, COUNT_ALBUM, COUNT_FOLDER, COUNT_ITEM, CREATE_ALBUM, CREATE_FOLDER, GET_FOLDER, \
 	LIST_SHARED_ITEMS, LIST_USER_GROUP, \
@@ -253,8 +254,10 @@ class SynoPhotos( SynoWebService ):
 
 	# exprimental
 
-	def sync( self ):
-		pass
+	def sync( self, source_album: str, destination: str ):
+		fs = OSFS( root_path=destination, expand_vars=True, create=True )
+		album_id = self.id_for_album( source_album )
+		print( album_id )
 
 	# helpers
 
