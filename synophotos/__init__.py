@@ -1,14 +1,13 @@
 
 from logging import DEBUG, WARNING, getLogger
 from sys import exit as sysexit
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import Dict, Optional, Type, TypeVar
 
 from attrs import define, field
 from cattrs.preconf.pyyaml import make_converter
 from fs.errors import ResourceNotFound
 from fs.osfs import OSFS
 from platformdirs import user_config_dir
-from rich.console import Console
 from rich.logging import RichHandler
 
 from synophotos.ui import dataclass_table
@@ -66,7 +65,6 @@ class ApplicationContext:
 	debug: bool = field( default=None )
 
 	service: WebService = field( default=None )
-	console: Console = field( default=Console() ) # todo: move this somewhere else
 
 	def __attrs_post_init__( self ):
 		self.__load_config_files()
@@ -105,11 +103,3 @@ class ApplicationContext:
 	@property
 	def session( self ) -> SynoSession:
 		return self.sessions.get( self.config.profile )
-
-	# helpers
-
-	def print( self, obj: Any ) -> None:
-		if isinstance( obj, list ):
-			self.console.print( dataclass_table( obj ) )
-		else:
-			self.console.print( obj )
