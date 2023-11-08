@@ -73,28 +73,39 @@ def count( ctx: ApplicationContext, albums: bool, folders: bool, items: bool, pa
 
 # list
 
-@cli.command( help='lists objects' )
-@option( '-a', '--albums', required=False, is_flag=True, default=False, help='lists albums', type=bool )
-@option( '-f', '--folders', required=False, is_flag=True, default=False, help='lists folders', type=bool )
-@option( '-i', '--items', required=False, is_flag=True, default=False, help='lists items', type=bool )
-@option( '-p', '--parent_id', required=False, default=None, help='id of the parent (only valid when listing items or folders)', type=int )
-@option( '-r', '--recursive', required=False, is_flag=True, default=False, help='include all folders recursively', type=bool )
+@cli.command( help='lists existing albums and their ids' )
 @option( '-s', '--shared', required=False, is_flag=True, default=False, help='include shared elements' )
 @argument( 'name', nargs=1, required=False, type=str )
 @pass_obj
-def list( ctx: ApplicationContext, albums: bool, folders: bool, items: bool,
-          parent_id: int, recursive: bool, shared: bool, name: str = None ):
-	if recursive:
-		pp( 'warning: fetching items without paging and/or recursively, this might take a while ...' )
-
-	if albums:
+def albums( ctx: ApplicationContext, name: str, shared: bool ):
 		print_obj( synophotos.list_albums( name, shared ) )
-	elif folders:
+
+@cli.command( help='lists existing folders and their ids' )
+@option( '-p', '--parent_id', required=False, default=None, help='id of the parent', type=int )
+@option( '-r', '--recursive', required=False, is_flag=True, default=False, help='include all folders recursively', type=bool )
+@argument( 'name', nargs=1, required=False, type=str )
+@pass_obj
+def folders( ctx: ApplicationContext, name: str, parent_id: int, recursive: bool ):
 		print_obj( synophotos.list_folders( parent_id, name, recursive ) )
-	elif items:
-		print_obj( synophotos.list_items( parent_id, all_items=True, recursive=recursive ) )
-	else:
-		print_error( 'provide one of the mandatory options or use --help to learn more' )
+
+@cli.command( help='lists objects' )
+@option( '-a', '--album', required=False, default=None, help='id of the parent folder', type=int )
+@option( '-f', '--folder', required=False, default=None, help='id of the parent folder', type=int )
+@option( '-r', '--recursive', required=False, is_flag=True, default=False, help='include all folders recursively', type=bool )
+@argument( 'name', nargs=1, required=False, type=str )
+@pass_obj
+def list( ctx: ApplicationContext, album: int, folder: int, recursive: bool, name: str = None ):
+	if recursive:
+		pp( '[red]fetching items without paging and/or recursively, this might take a while ...[/red]' )
+
+	if album and folder:
+		print_error( '-a and -f cannot be used together, specify only one option' )
+		return
+
+	if not album and not folder:
+		folder = synophotos.root_folder()
+
+	print_obj( synophotos.list_items( album_id=album, folder_id=folder, recursive=recursive, name=name ) )
 
 @cli.command( help='lists existing groups and their ids' )
 @pass_obj

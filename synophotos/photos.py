@@ -182,29 +182,37 @@ class SynoPhotos( SynoWebService ):
 
 		return folders
 
-	def list_items( self, parent_id: int = 0, all_items: bool = False, recursive: bool = False ) -> List[Item]:
+	def list_items( self, album_id: int = None, folder_id: int = None, recursive: bool = False, name: str = None ) -> List[Item]:
 		items = []
 
-		if parent_id == 0:
-			parent_id = self.root_folder().id
+		if not album_id and not folder_id:
+			folder_id = self.root_folder().id
 
-		parent_ids = [parent_id]
-		if recursive:
-			parent_ids.extend( [p.id for p in self.list_folders( parent_id, recursive=True )] )
-			all_items = True  # recursive implies all_items, recursive + limiting does not make sense
+		limit, offset = BROWSE_ITEM.get( 'limit' ), BROWSE_ITEM.get( 'offset' )
 
-		for parent_id in parent_ids:
-			if all_items:
-				limit, offset = BROWSE_ITEM.get( 'limit' ), BROWSE_ITEM.get( 'offset' )
+		if album_id:
+			while True:
+				if page := self.entry( {**BROWSE_ITEM, 'album_id': album_id, 'limit': limit, 'offset': offset} ).as_list( Item ):
+					items.extend( page )
+					offset = offset + limit
+				else:
+					break
+
+		elif folder_id:
+			parent_ids = [folder_id]
+			if recursive:
+				parent_ids.extend( [p.id for p in self.list_folders( folder_id, recursive=True )] )
+
+			for folder_id in parent_ids:
 				while True:
-					page = self.get( ENTRY_URL, {**BROWSE_ITEM, 'folder_id': parent_id, 'limit': limit, 'offset': offset} ).as_list( Item )
-					if len( page ) > 0:
+					if page := self.entry( {**BROWSE_ITEM, 'folder_id': folder_id, 'limit': limit, 'offset': offset} ).as_list( Item ):
 						items.extend( page )
 						offset = offset + limit
 					else:
 						break
-			else:
-				items = self.get( ENTRY_URL, {**BROWSE_ITEM, 'folder_id': parent_id} ).as_list( Item )
+
+		if name:
+			items = list( filter( lambda i: name.lower() in i.filename.lower(), items ) )
 
 		return items
 
