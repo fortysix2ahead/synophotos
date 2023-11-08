@@ -5,7 +5,8 @@ from typing import Callable, Dict, List, Optional
 
 from attrs import define, field
 
-from synophotos.parameters.photos import ADD_ITEM_TO_ALBUM, BROWSE_ALBUM, BROWSE_FOLDER, BROWSE_ITEM, COUNT_ALBUM, COUNT_FOLDER, COUNT_ITEM, CREATE_ALBUM, CREATE_FOLDER, GET_FOLDER, LIST_USER_GROUP, \
+from synophotos.parameters.photos import ADD_ITEM_TO_ALBUM, BROWSE_ALBUM, BROWSE_ALBUM_ALL, BROWSE_FOLDER, BROWSE_ITEM, COUNT_ALBUM, COUNT_FOLDER, COUNT_ITEM, CREATE_ALBUM, CREATE_FOLDER, GET_FOLDER, \
+	LIST_USER_GROUP, \
 	SEARCH_ITEM, SHARE_ALBUM, UPDATE_PERMISSION
 from synophotos.parameters.webservice import ENTRY_URL
 from synophotos.webservice import SynoResponse, SynoWebService
@@ -151,12 +152,12 @@ class SynoPhotos( SynoWebService ):
 
 	# listing elements
 
-	def list_albums( self, name: Optional[str] ) -> List[Album]:
-		albums = self.get( ENTRY_URL, BROWSE_ALBUM ).as_list( Album )
-		if name is not None:
+	def list_albums( self, name: Optional[str], include_shared: bool = False ) -> List[Album]:
+		payload = BROWSE_ALBUM if not include_shared else BROWSE_ALBUM_ALL
+		albums = self.entry( payload ).as_list( Album )
+		if name: # filter for name if provided
 			albums = [a for a in albums if name.lower() in a.name.lower()]
-		albums = sorted( albums, key=lambda a: a.name )
-		return albums
+		return sorted( albums, key=lambda a: a.name )
 
 	def list_folders( self, parent_id: int = None, name: str = None, recursive: bool = False ) -> List[Folder]:
 		if parent_id in [None, 0]:

@@ -80,16 +80,17 @@ def count( ctx: ApplicationContext, albums: bool, folders: bool, items: bool, pa
 @option( '-i', '--items', required=False, is_flag=True, default=False, help='lists items', type=bool )
 @option( '-p', '--parent_id', required=False, default=None, help='id of the parent (only valid when listing items or folders)', type=int )
 @option( '-r', '--recursive', required=False, is_flag=True, default=False, help='include all folders recursively', type=bool )
+@option( '-s', '--shared', required=False, is_flag=True, default=False, help='include shared elements' )
 @option( '-u', '--users', required=False, is_flag=True, default=False, help='lists users', type=bool )
 @argument( 'name', nargs=1, required=False, type=str )
 @pass_obj
 def list( ctx: ApplicationContext, albums: bool, folders: bool, items: bool, groups: bool, users: bool,
-          parent_id: int = None, name: str = None, recursive: bool = False ):
+          parent_id: int, recursive: bool, shared: bool, name: str = None ):
 	if recursive:
 		pp( 'warning: fetching items without paging and/or recursively, this might take a while ...' )
 
 	if albums:
-		print_obj( synophotos.list_albums( name ) )
+		print_obj( synophotos.list_albums( name, shared ) )
 	elif folders:
 		print_obj( synophotos.list_folders( parent_id, name, recursive ) )
 	elif items:

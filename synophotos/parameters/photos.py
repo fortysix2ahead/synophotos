@@ -1,71 +1,59 @@
 
+from enum import Enum
+
+# todo: not sure if this can be structured in a nicer way, it feels like a lot of boilerplate stuff
+
+# enums to store different allowed 'field values'
+
+class api( Enum ):
+	browse_album='SYNO.Foto.Browse.Album'
+
+class category( Enum ):
+	normal='normal'
+	normal_share_with_me='normal_share_with_me'
+
+class sort_direction( Enum ):
+	asc='asc'
+	desc='desc'
+
+# dicts of default values from enums from above
+
+SORT_ASC = { sort_direction.__name__: sort_direction.asc.name }
+
+CAT_NORMAL = { category.__name__: category.normal.name }
+CAT_SHARED = { category.__name__: category.normal_share_with_me.name }
+
+API_BROWSE_ALBUM = {api.__name__: api.browse_album.value}
+
 # urls
 
 BROWSE_NORMAL_ALBUM_URL = '{url}/entry.cgi/SYNO.Foto.Browse.NormalAlbum'
 
-# parameter sets
+# SID is always necessary
 
-SID = {
-    'format': 'sid',
-    '_sid': None
-}
+SID = { 'format': 'sid', '_sid': None }
 
-# parameter sets for various operations
+# parameter sets for various operations, this is very basic stuff
+# unfortunately the version depends on DSM version
 
-COUNT = {
-	'method': 'count',
-	'version': 1,
-    **SID,
-}
+COUNT = { 'method': 'count', 'version': 1, **SID, }
+CREATE = { 'method': 'create', 'version': 1, **SID, }
+GET = { 'method': 'get', 'version': 2, **SID, }
+LIST = { 'method': 'list', 'version': 4, 'offset': 0, 'limit': 100, **SID, }
 
-CREATE = {
-    'method': 'create',
-    'version': 1,
-    **SID,
-}
+# category: "normal_share_with_me"
 
-GET = {
-    'method': 'get',
-    'version': 2,
-    **SID,
-}
+# browse elements
 
-LIST = {
-    'method': 'list',
-    'version': 2,
-    'offset': 0,
-    'limit': 100,
-    **SID,
-}
-
-BROWSE_ALBUM = {
-    **LIST,
-    'api': 'SYNO.Foto.Browse.Album',
-}
-
-BROWSE_FOLDER = {
-    **LIST,
-    'api': 'SYNO.Foto.Browse.Folder',
-    'folder_id': 0
-}
-
-BROWSE_ITEM = {
-    **LIST,
-    'api': 'SYNO.Foto.Browse.Item',
-    'sort_by': 'filename',
-    'sort_direction': 'asc',
-}
+BROWSE_ALBUM = { **API_BROWSE_ALBUM, **CAT_NORMAL, **LIST, }
+BROWSE_ALBUM_ALL = { **API_BROWSE_ALBUM, **SORT_ASC, **CAT_SHARED, **LIST, }
+BROWSE_FOLDER = { 'api': 'SYNO.Foto.Browse.Folder', 'folder_id': 0, **LIST, }
+BROWSE_ITEM = { 'api': 'SYNO.Foto.Browse.Item', 'sort_by': 'filename', **SORT_ASC, **LIST, }
 
 # search elements
 
-SEARCH_COUNT_ITEM = {
-	'api': 'SYNO.Foto.Search.Search',
-	'method': 'count_item',
-	'version': '2',
-	'keyword': '', # needs to be filled out
-	**SID,
-}
-
+# keyword needs to be filled out
+SEARCH_COUNT_ITEM = { 'api': 'SYNO.Foto.Search.Search', 'method': 'count_item', 'version': '2', 'keyword': '', **SID, }
 SEARCH_ITEM = {
 	'api': 'SYNO.Foto.Search.Search',
 	'method': 'list_item',
@@ -82,31 +70,13 @@ SEARCH_ITEM = {
 
 # count elements
 
-COUNT_ALBUM = {
-    **COUNT,
-    'api': 'SYNO.Foto.Browse.Album',
-}
+COUNT_ALBUM = { 'api': 'SYNO.Foto.Browse.Album', **COUNT, }
+COUNT_FOLDER = { 'api': 'SYNO.Foto.Browse.Folder', 'id': 0, **COUNT, }
+COUNT_ITEM = { 'api': 'SYNO.Foto.Browse.Item', **COUNT, }
+COUNT_ITEM_FOLDER = { 'folder_id': 0, **COUNT_ITEM, }
+COUNT_ITEM_ALBUM = { 'album_id': 0, **COUNT_ITEM, }
 
-COUNT_FOLDER = {
-    **COUNT,
-    'api': 'SYNO.Foto.Browse.Folder',
-    'id': 0,
-}
-
-COUNT_ITEM = {
-    **COUNT,
-    'api': 'SYNO.Foto.Browse.Item',
-}
-
-COUNT_ITEM_FOLDER = {
-    **COUNT_ITEM,
-    'folder_id': 0,
-}
-
-COUNT_ITEM_ALBUM = {
-    **COUNT_ITEM,
-    'album_id': 0,
-}
+#
 
 GET_FOLDER = {
     'api': 'SYNO.Foto.Browse.Folder',

@@ -124,6 +124,9 @@ class SynoWebService:
 	def device_id( self ) -> Optional[str]:
 		return self.session.device_id if self.session else None
 
+	def entry( self, payload: Dict, **kwargs ) -> SynoResponse:
+		return self.get( ENTRY_URL, payload, **kwargs )
+
 	def get( self, url: str, template: Dict, **kwargs ) -> SynoResponse:
 		if self.session_id:
 			template = { **template, '_sid': self.session_id }
@@ -140,7 +143,7 @@ class SynoWebService:
 		)
 
 		log.debug( f'Received response with status = {response.status_code}, and payload:' )
-		log.debug( pretty_repr( response.json(), max_depth=2 ) )
+		log.debug( pretty_repr( response.json(), max_depth=4 ) )
 
 		return SynoResponse( response=response )
 
