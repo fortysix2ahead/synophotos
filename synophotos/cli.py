@@ -6,7 +6,7 @@ from click import argument, Context, group, option, pass_context, pass_obj
 
 from synophotos import ApplicationContext
 from synophotos.photos import SynoPhotos
-from synophotos.ui import pprint as pp, print_error as pe
+from synophotos.ui import pprint as pp, print_error, print_obj
 
 log = getLogger( __name__ )
 
@@ -26,7 +26,7 @@ def cli( ctx: Context, debug: bool = False ):
 	# attempt to log in
 	if not synophotos.login( ctx.obj ):
 		#ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
-		pe( 'failed to log in' )
+		print_error( 'failed to log in' )
 		sysexit( -1 )
 
 # create
@@ -69,7 +69,7 @@ def count( ctx: ApplicationContext, albums: bool, folders: bool, items: bool, pa
 		else:
 			pp( synophotos.count_items( folder_id=parent_id ) )
 	else:
-		pe( 'provide one of the mandatory options -a, -f, -i or use --help to learn more' )
+		print_error( 'provide one of the mandatory options -a, -f, -i or use --help to learn more' )
 
 # list
 
@@ -89,15 +89,17 @@ def list( ctx: ApplicationContext, albums: bool, folders: bool, items: bool, gro
 		pp( 'warning: fetching items without paging and/or recursively, this might take a while ...' )
 
 	if albums:
-		pp( synophotos.list_albums( name ) )
+		print_obj( synophotos.list_albums( name ) )
 	elif folders:
-		pp( synophotos.list_folders( parent_id, name, recursive ) )
+		print_obj( synophotos.list_folders( parent_id, name, recursive ) )
 	elif items:
-		pp( synophotos.list_items( parent_id, all_items=True, recursive=recursive ) )
+		print_obj( synophotos.list_items( parent_id, all_items=True, recursive=recursive ) )
 	elif groups:
-		pp( synophotos.list_groups() )
+		print_obj( synophotos.list_groups() )
 	elif users:
-		pp( synophotos.list_users() )
+		print_obj( synophotos.list_users() )
+	else:
+		print_error( 'provide one of the mandatory options or use --help to learn more' )
 
 @cli.command( help='gets the id of the root folder' )
 @pass_obj

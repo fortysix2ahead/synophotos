@@ -14,7 +14,7 @@ blue = Style( color='blue' )
 def pprint( item: Any ):
 	cs.print( item )
 
-def print_obj( self, obj: Any ) -> None:
+def print_obj( obj: Any ) -> None:
 		if isinstance( obj, list ):
 			pprint( dataclass_table( obj ) )
 		else:

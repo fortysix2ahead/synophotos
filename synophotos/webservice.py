@@ -2,11 +2,11 @@ from abc import abstractmethod
 from datetime import datetime, timedelta
 from logging import getLogger
 from sys import exit as sysexit
-from typing import Any, ClassVar, Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from attrs import define, field
 from cattrs import Converter
-from requests import get, JSONDecodeError, post, PreparedRequest, Response
+from requests import JSONDecodeError, PreparedRequest, Response, get, post
 from rich.pretty import pretty_repr
 from rich.prompt import Prompt
 from typing_extensions import Protocol
@@ -17,9 +17,8 @@ from synophotos.parameters.webservice import ENTRY_URL, LOGIN_PARAMS
 log = getLogger( __name__ )
 
 T = TypeVar( 'T' )
-
-CONVERTER = Converter()
 SESSION_TIMEOUT = timedelta( days=30 )
+conv = Converter()
 
 class WebService( Protocol ):
 
@@ -42,8 +41,6 @@ class SynoRequest:
 @define
 class SynoResponse:
 
-	factory: ClassVar = field( default=None )
-
 	response: Response = field( default=None )
 	status_code: int = field( default=None )
 	data: Dict = field( factory=dict )
@@ -65,14 +62,17 @@ class SynoResponse:
 			self.success = False
 
 	def as_list( self, cls: Type[T] ) -> List[T]:
+		return [conv.structure( e, cls ) for e in self.as_dict_list()]
+
+	def as_dict_list( self ) -> List[Dict]:
 		if element_list := self.data.get( 'list' ):
-			return sorted( [SynoResponse.factory.load( e, cls ) for e in element_list], key=lambda e: e.id )
+			return sorted( [e for e in element_list], key=lambda e: e.get( 'id' ) )
 		else:
 			return []
 
 	def as_obj( self, cls: Type[T] ) -> T:
 		first_key, first_value = next( iter( self.data.items() ) )
-		return CONVERTER.structure( first_value, cls )
+		return conv.structure( first_value, cls )
 
 	def request( self ) -> PreparedRequest:
 		return self.response.request
@@ -199,6 +199,6 @@ class SynoWebService:
 			syno_response = self.get( ENTRY_URL, LOGIN_PARAMS, account=self.account, passwd=self.password )
 
 		if syno_response.success:
-			return CONVERTER.structure_attrs_fromdict( { **syno_response.data, 'updated_at': datetime.utcnow().isoformat() }, SynoSession )
+			return conv.structure_attrs_fromdict( {**syno_response.data, 'updated_at': datetime.utcnow().isoformat()}, SynoSession )
 		else:
-			return CONVERTER.structure_attrs_fromdict( { 'error_code': syno_response.error_code, 'error_msg': syno_response.error_msg }, SynoSession )
+			return conv.structure_attrs_fromdict( {'error_code': syno_response.error_code, 'error_msg': syno_response.error_msg}, SynoSession )
