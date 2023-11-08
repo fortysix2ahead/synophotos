@@ -248,7 +248,7 @@ class SynoPhotos( SynoWebService ):
 		return next( (d.get( 'id' ) for d in self.list_users() if (d.get( 'name' ) == user and d.get( 'type' ) == 'user')), None )
 
 	def id_for_group( self, group: str ) -> int:
-		return next( (d.get( 'id' ) for d in self.list_user_group() if (d.get( 'name' ) == group and d.get( 'type' ) == 'group')), None )
+		return next( (d.get( 'id' ) for d in self.list_groups() if (d.get( 'name' ) == group and d.get( 'type' ) == 'group')), None )
 
 	def id_for_album( self, album: str ) -> int:
 		return next( (a.id for a in self.list_albums() if album.lower() in a.name.lower()), None )
