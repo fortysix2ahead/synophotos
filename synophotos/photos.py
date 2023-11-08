@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from json import dumps, loads
+from logging import getLogger
+from typing import Callable, Dict, List, Optional
 
 from attrs import define, field
 from cattrs import Converter
@@ -12,6 +14,8 @@ from synophotos.parameters.photos import ADD_ITEM_TO_ALBUM, BROWSE_ALBUM, BROWSE
 	SEARCH_ITEM, SHARE_ALBUM, UPDATE_PERMISSION
 from synophotos.parameters.webservice import ENTRY_URL
 from synophotos.webservice import SynoResponse, SynoWebService
+
+log = getLogger( __name__ )
 
 conv = Converter()
 jconv = make_converter()
@@ -256,8 +260,11 @@ class SynoPhotos( SynoWebService ):
 
 	def sync( self, source_album: str, destination: str ):
 		fs = OSFS( root_path=destination, expand_vars=True, create=True )
-		album_id = self.id_for_album( source_album )
-		print( album_id )
+		if not (album_id := self.id_for_album( source_album )):
+			log.info( f'error during sync: album {source_album} not found' )
+
+		items = self.list_items( album_id, True, True )
+		print( len( items ) )
 
 	# helpers
 
