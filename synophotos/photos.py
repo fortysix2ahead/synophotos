@@ -263,8 +263,11 @@ class SynoPhotos( SynoWebService ):
 		if not (album_id := self.id_for_album( source_album )):
 			log.info( f'error during sync: album {source_album} not found' )
 
-		items = self.list_items( album_id, True, True )
-		print( len( items ) )
+		items = self.list_items( album_id=album_id )
+		for i in items:
+			path = f'{i.folder_id}/{i.id}_{i.filename.lower()}'
+			if not fs.exists( path ):
+				print( path )
 
 	# helpers
 
