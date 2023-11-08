@@ -6,7 +6,7 @@ from typing import Callable, Dict, List, Optional
 from attrs import define, field
 
 from synophotos.parameters.photos import ADD_ITEM_TO_ALBUM, BROWSE_ALBUM, BROWSE_ALBUM_ALL, BROWSE_FOLDER, BROWSE_ITEM, COUNT_ALBUM, COUNT_FOLDER, COUNT_ITEM, CREATE_ALBUM, CREATE_FOLDER, GET_FOLDER, \
-	LIST_USER_GROUP, \
+	LIST_SHARED_ITEMS, LIST_USER_GROUP, \
 	SEARCH_ITEM, SHARE_ALBUM, UPDATE_PERMISSION
 from synophotos.parameters.webservice import ENTRY_URL
 from synophotos.webservice import SynoResponse, SynoWebService
@@ -152,11 +152,10 @@ class SynoPhotos( SynoWebService ):
 
 	# listing elements
 
-	def list_albums( self, name: Optional[str], include_shared: bool = False ) -> List[Album]:
+	def list_albums( self, name: str = None, include_shared: bool = False ) -> List[Album]:
 		payload = BROWSE_ALBUM if not include_shared else BROWSE_ALBUM_ALL
 		albums = self.entry( payload ).as_list( Album )
-		if name: # filter for name if provided
-			albums = [a for a in albums if name.lower() in a.name.lower()]
+		albums = [a for a in albums if name.lower() in a.name.lower()] if name else albums
 		return sorted( albums, key=lambda a: a.name )
 
 	def list_folders( self, parent_id: int = None, name: str = None, recursive: bool = False ) -> List[Folder]:
@@ -182,38 +181,56 @@ class SynoPhotos( SynoWebService ):
 
 		return folders
 
-	def list_items( self, album_id: int = None, folder_id: int = None, recursive: bool = False, name: str = None ) -> List[Item]:
-		items = []
-
-		if not album_id and not folder_id:
-			folder_id = self.root_folder().id
-
-		limit, offset = BROWSE_ITEM.get( 'limit' ), BROWSE_ITEM.get( 'offset' )
+	def list_album_items( self, album_id: int = None ) -> List[Item]:
+		items, limit, offset = [], BROWSE_ITEM.get( 'limit' ), BROWSE_ITEM.get( 'offset' )
 
 		if album_id:
+			albums = self.list_albums( include_shared=True )
+			album = next( ( a for a in albums if a.id == album_id ), None )
+
 			while True:
-				if page := self.entry( {**BROWSE_ITEM, 'album_id': album_id, 'limit': limit, 'offset': offset} ).as_list( Item ):
+				if album.shared and album.passphrase:
+					page = self.entry( {**LIST_SHARED_ITEMS, 'limit': limit, 'offset': offset, 'passphrase': f'"{album.passphrase}"'} ).as_list( Item )
+				else:
+					page = self.entry( {**BROWSE_ITEM, 'album_id': album_id, 'limit': limit, 'offset': offset} ).as_list( Item )
+
+				if page:
 					items.extend( page )
 					offset = offset + limit
 				else:
 					break
 
+		return items
+
+	def list_folder_items( self, folder_id: int = None, recursive: bool = False ) -> List[Item]:
+		items, limit, offset = [], BROWSE_ITEM.get( 'limit' ), BROWSE_ITEM.get( 'offset' )
+
+		parent_ids = [folder_id]
+		if recursive:
+			parent_ids.extend( [p.id for p in self.list_folders( folder_id, recursive=True )] )
+
+		for folder_id in parent_ids:
+			while True:
+				if page := self.entry( {**BROWSE_ITEM, 'folder_id': folder_id, 'limit': limit, 'offset': offset} ).as_list( Item ):
+					items.extend( page )
+					offset = offset + limit
+				else:
+					break
+
+		return items
+
+	def list_items( self, album_id: int = None, folder_id: int = None, recursive: bool = False, name: str = None ) -> List[Item]:
+		if not album_id and not folder_id:
+			folder_id = self.root_folder().id
+
+		if album_id:
+			items = self.list_album_items( album_id )
 		elif folder_id:
-			parent_ids = [folder_id]
-			if recursive:
-				parent_ids.extend( [p.id for p in self.list_folders( folder_id, recursive=True )] )
+			items = self.list_folder_items( folder_id, recursive )
+		else:
+			items = []
 
-			for folder_id in parent_ids:
-				while True:
-					if page := self.entry( {**BROWSE_ITEM, 'folder_id': folder_id, 'limit': limit, 'offset': offset} ).as_list( Item ):
-						items.extend( page )
-						offset = offset + limit
-					else:
-						break
-
-		if name:
-			items = list( filter( lambda i: name.lower() in i.filename.lower(), items ) )
-
+		items = list( filter( lambda i: name.lower() in i.filename.lower(), items ) ) if name else items
 		return items
 
 	def list_groups( self ):
@@ -240,6 +257,9 @@ class SynoPhotos( SynoWebService ):
 		return self.get( ENTRY_URL, {**CREATE_FOLDER, 'name': f'\"{name}\"', 'target_id': parent_id} )
 
 	# helpers
+
+	def album( self, id: int ) -> Album:
+		pass
 
 	def folder( self, id: int ) -> Folder:
 		return self.get( ENTRY_URL, {**GET_FOLDER, 'id': id} ).as_obj( Folder )
