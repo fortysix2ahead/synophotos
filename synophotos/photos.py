@@ -169,7 +169,7 @@ class SynoPhotos( SynoWebService ):
 			queue = [root]
 			while len( queue ) > 0:
 				parent = queue.pop( 0 )
-				children = self.get( ENTRY_URL, {**BROWSE_FOLDER, 'id': parent.id} ).as_list( Folder )
+				children = self.entry( {**BROWSE_FOLDER, 'id': parent.id} ).as_list( Folder )
 				folders.extend( children )
 				queue.extend( children )
 		else:
@@ -251,7 +251,7 @@ class SynoPhotos( SynoWebService ):
 		return next( (d.get( 'id' ) for d in self.list_groups() if (d.get( 'name' ) == group and d.get( 'type' ) == 'group')), None )
 
 	def id_for_album( self, album: str ) -> int:
-		return next( (a.id for a in self.list_albums() if album.lower() in a.name.lower()), None )
+		return next( (a.id for a in self.list_albums( album, True ) if album.lower() in a.name.lower()), None )
 
 	def id_for_folder( self, folder: str ) -> int:
 		return next( (f.id for f in self.list_folders( 0, folder, True )), None )

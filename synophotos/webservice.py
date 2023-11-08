@@ -113,9 +113,6 @@ class SynoWebService:
 
 	session: SynoSession = field( default=None )
 
-	def __post_init__( self ):
-		self._factory = Factory()
-
 	@property
 	def session_id( self ) -> Optional[str]:
 		return self.session.sid if self.session else None
@@ -125,7 +122,7 @@ class SynoWebService:
 		return self.session.device_id if self.session else None
 
 	def entry( self, payload: Dict, **kwargs ) -> SynoResponse:
-		return self.get( ENTRY_URL, payload, **kwargs )
+		return self.get( ENTRY_URL, payload | { '_sid': self.session_id }, **kwargs )
 
 	def get( self, url: str, template: Dict, **kwargs ) -> SynoResponse:
 		if self.session_id:

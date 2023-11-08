@@ -7,6 +7,7 @@ from enum import Enum
 
 class api( Enum ):
 	browse_album='SYNO.Foto.Browse.Album'
+	browse_folder='SYNO.Foto.Browse.Folder'
 
 class category( Enum ):
 	normal='normal'
@@ -24,6 +25,7 @@ CAT_NORMAL = { category.__name__: category.normal.name }
 CAT_SHARED = { category.__name__: category.normal_share_with_me.name }
 
 API_BROWSE_ALBUM = {api.__name__: api.browse_album.value}
+API_BROWSE_FOLDER = {api.__name__: api.browse_folder.value}
 
 # urls
 
@@ -39,7 +41,9 @@ SID = { 'format': 'sid', '_sid': None }
 COUNT = { 'method': 'count', 'version': 1, **SID, }
 CREATE = { 'method': 'create', 'version': 1, **SID, }
 GET = { 'method': 'get', 'version': 2, **SID, }
+LIST2 = { 'method': 'list', 'version': 2, 'offset': 0, 'limit': 5000, **SID, }
 LIST = { 'method': 'list', 'version': 4, 'offset': 0, 'limit': 100, **SID, }
+LIST4 = LIST
 
 # category: "normal_share_with_me"
 
@@ -47,7 +51,7 @@ LIST = { 'method': 'list', 'version': 4, 'offset': 0, 'limit': 100, **SID, }
 
 BROWSE_ALBUM = { **API_BROWSE_ALBUM, **CAT_NORMAL, **LIST, }
 BROWSE_ALBUM_ALL = { **API_BROWSE_ALBUM, **SORT_ASC, **CAT_SHARED, **LIST, }
-BROWSE_FOLDER = { 'api': 'SYNO.Foto.Browse.Folder', 'folder_id': 0, **LIST, }
+BROWSE_FOLDER = API_BROWSE_FOLDER | LIST2 | SORT_ASC | { 'id': 0 }
 BROWSE_ITEM = { 'api': 'SYNO.Foto.Browse.Item', 'sort_by': 'filename', **SORT_ASC, **LIST, }
 
 # search elements
