@@ -76,15 +76,13 @@ def count( ctx: ApplicationContext, albums: bool, folders: bool, items: bool, pa
 @cli.command( help='lists objects' )
 @option( '-a', '--albums', required=False, is_flag=True, default=False, help='lists albums', type=bool )
 @option( '-f', '--folders', required=False, is_flag=True, default=False, help='lists folders', type=bool )
-@option( '-g', '--groups', required=False, is_flag=True, default=False, help='lists groups', type=bool )
 @option( '-i', '--items', required=False, is_flag=True, default=False, help='lists items', type=bool )
 @option( '-p', '--parent_id', required=False, default=None, help='id of the parent (only valid when listing items or folders)', type=int )
 @option( '-r', '--recursive', required=False, is_flag=True, default=False, help='include all folders recursively', type=bool )
 @option( '-s', '--shared', required=False, is_flag=True, default=False, help='include shared elements' )
-@option( '-u', '--users', required=False, is_flag=True, default=False, help='lists users', type=bool )
 @argument( 'name', nargs=1, required=False, type=str )
 @pass_obj
-def list( ctx: ApplicationContext, albums: bool, folders: bool, items: bool, groups: bool, users: bool,
+def list( ctx: ApplicationContext, albums: bool, folders: bool, items: bool,
           parent_id: int, recursive: bool, shared: bool, name: str = None ):
 	if recursive:
 		pp( 'warning: fetching items without paging and/or recursively, this might take a while ...' )
@@ -95,12 +93,18 @@ def list( ctx: ApplicationContext, albums: bool, folders: bool, items: bool, gro
 		print_obj( synophotos.list_folders( parent_id, name, recursive ) )
 	elif items:
 		print_obj( synophotos.list_items( parent_id, all_items=True, recursive=recursive ) )
-	elif groups:
-		print_obj( synophotos.list_groups() )
-	elif users:
-		print_obj( synophotos.list_users() )
 	else:
 		print_error( 'provide one of the mandatory options or use --help to learn more' )
+
+@cli.command( help='lists existing groups and their ids' )
+@pass_obj
+def groups( ctx: ApplicationContext ):
+		print_obj( synophotos.list_groups() )
+
+@cli.command( help='lists existing users and their ids' )
+@pass_obj
+def users( ctx: ApplicationContext ):
+		print_obj( synophotos.list_users() )
 
 @cli.command( help='gets the id of the root folder' )
 @pass_obj
