@@ -141,7 +141,7 @@ def unshare( ctx: ApplicationContext, album_id: int ):
 @option( '-u', '--user', required=False, is_flag=True, help='search for user id' )
 @argument( 'element', nargs=1, required=True )
 @pass_obj
-def find_id( ctx: ApplicationContext, element: str, user: bool, group: bool, album: bool, folder: bool ):
+def identify( ctx: ApplicationContext, element: str, user: bool, group: bool, album: bool, folder: bool ):
 	if album:
 		pp( synophotos.id_for_album( element ) )
 	elif folder:
