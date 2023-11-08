@@ -158,6 +158,20 @@ def find_id( ctx: ApplicationContext, element: str, user: bool, group: bool, alb
 def search( ctx: ApplicationContext, name: str ):
 	pp( synophotos.search( name ) )
 
+@cli.command( help='displays a selected payload (this is for development only)' )
+@argument( 'name', nargs=1, required=False )
+@pass_obj
+def payload( ctx: ApplicationContext, name: str ):
+	from inspect import getmembers
+	from sys import modules
+	members = [(k, v) for k, v in getmembers( modules['synophotos.parameters.photos'] ) if not k.startswith( '__' ) and isinstance( v, dict )]
+
+	if name:
+		pp( next( (v for k, v in members if k.lower() == name.lower()), None ) )
+	else:
+		for k, v in sorted( members, key=lambda m: m[0] ):
+			print( k )
+
 @cli.command( help='prints version information' )
 @pass_obj
 def version( ctx: ApplicationContext ):
