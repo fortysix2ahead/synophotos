@@ -1,5 +1,5 @@
 
-# Synophotos CLI
+# Synophotos - Synology Photos Command Line Interface
 
 [![Documentation Status](https://readthedocs.org/projects/synophotos/badge/?version=latest)](https://synophotos.readthedocs.io/en/latest/?badge=latest)
 

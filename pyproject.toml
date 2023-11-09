@@ -3,14 +3,15 @@ name = "synophotos"
 authors = [{ name = "fortysix2ahead", email = "fortysix2ahead@gmail.com" }]
 maintainers = [{ name = "fortysix2ahead", email = "fortysix2ahead@gmail.com" }]
 version = "0.1.0"
-description = "CLI Client for Synology Photos"
+description = "Command Line Interface Client for Synology Photos"
 readme = "README.md"
-keywords = ["synology", "photos"]
+keywords = ["synology", "photos", "terminal", "cli", "command line"]
 license = {text = "BSD-3-Clause"}
 classifiers = [
-    "License :: OSI Approved :: BSD License",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
 ]
 requires-python = ">=3.9"
 dependencies = [
@@ -25,13 +26,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-recommended = [
+dev = [
+  "bumpver~=2023.1129",
   "mkdocs~=1.5.3",
   "mkdocs-click~=0.8.1",
   "mkdocs-material~=9.4.7"
 ]
 
 [project.urls]
+"Homepage" = "https://github.com/fortysix2ahead/synophotos/"
 "Source Code" = "https://github.com/fortysix2ahead/synophotos/"
 "Issue Tracker" = "https://github.com/fortysix2ahead/synophotos/issues/"
 
@@ -39,5 +42,23 @@ recommended = [
 synophotos = "synophotos.cli:main"
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.bumpver]
+current_version = "0.1.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "Increased version from {old_version} to {new_version}"
+tag_message = "{new_version}"
+tag_scope = "default"
+pre_commit_hook = ""
+post_commit_hook = ""
+commit = true
+tag = true
+push = true
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = ['current_version = "{version}"',]
+# "setup.py" = ["{version}", "{pep440_version}", ]
+# "README.md" = ["{version}", "{pep440_version}",]
+# "synophotos/__init__.py" = ["{version}"]

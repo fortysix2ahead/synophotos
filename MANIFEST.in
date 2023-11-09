@@ -1,0 +1,6 @@
+
+# added by check-manifest
+include *.txt
+include *.yaml
+recursive-include docs *.md
+recursive-include docs *.txt
