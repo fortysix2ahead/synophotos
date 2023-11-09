@@ -2,6 +2,8 @@
 site_name: Synophotos CLI - Documentation
 site_url: https://github.com/fortysix2ahead/synophotos
 
+docs_dir: docs
+
 nav:
     - Home: 'index.md'
     - 'CLI Reference': 'cli.md'
