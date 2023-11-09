@@ -182,7 +182,7 @@ def identify( ctx: ApplicationContext, element: str, user: bool, group: bool, al
 	else:
 		pp( '[bold]error[/bold]: use one of the parameters a/g/u to indicate what to identify' )
 
-@cli.command( help='search for various things' )
+@cli.command( hidden=True, help='search for various things' )
 @argument( 'name', nargs=1, required=True )
 @pass_obj
 def search( ctx: ApplicationContext, name: str ):
