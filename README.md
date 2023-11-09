@@ -5,7 +5,11 @@ Synophotos Command Line Interface (CLI) is an attempt to enable remote control o
 
 ## Features
 
-- todo
+- connect to a Synology Photos instance and run various commands remotely 
+- list and count albums, folders and images
+- list users and groups
+- create albums and populate albums from existing items
+- share and unshare albums
 
 ### `count`
 
