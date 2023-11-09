@@ -3,8 +3,9 @@ site_name: Synophotos CLI - Documentation
 site_url: https://github.com/fortysix2ahead/synophotos
 
 nav:
-    - Home: index.md
-    - CLI Reference: cli.md
+    - Home: 'index.md'
+    - 'CLI Reference': 'cli.md'
+    - Issues: https://github.com/fortysix2ahead/synophotos/issues
 
 theme: material
 markdown_extensions:
