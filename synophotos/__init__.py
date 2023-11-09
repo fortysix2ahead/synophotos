@@ -1,5 +1,5 @@
 
-from logging import DEBUG, WARNING, getLogger
+from logging import DEBUG, INFO, WARNING, getLogger
 from sys import exit as sysexit
 from typing import Dict, Optional, Type, TypeVar
 
@@ -28,19 +28,16 @@ SESSIONS_FILE = 'sessions.yaml'
 
 CONVERTER = make_converter()
 
-LOG_CONSOLE_DEBUG_HANDLER = RichHandler( level=DEBUG, show_time=True, show_level=True, markup=True, log_time_format='%H:%M:%S' )
-LOG_CONSOLE_DEFAULT_HANDLER = RichHandler( level=WARNING, show_time=False, show_level=False, markup=True )
+# logging
 
-def activate_log_handler( debug: bool = False ):
-	log.handlers.clear()
-	if debug:
-		log.setLevel( DEBUG )
-		log.addHandler( LOG_CONSOLE_DEBUG_HANDLER )
-	else:
-		log.setLevel( WARNING )
-		log.addHandler( LOG_CONSOLE_DEFAULT_HANDLER )
+DISABLE = 100
+DEFAULT_HANDLER = RichHandler( level=WARNING, show_time=False, show_level=False, markup=True )
+VERBOSE_HANDLER = RichHandler( level=INFO, show_time=True, show_level=False, markup=True, log_time_format='%H:%M:%S' )
+DEBUG_HANDLER = RichHandler( level=DEBUG, show_time=True, show_level=True, markup=True, log_time_format='%H:%M:%S.%f', omit_repeated_times=False )
 
-activate_log_handler() # activate default log handler
+log.addHandler( DEFAULT_HANDLER )
+log.addHandler( VERBOSE_HANDLER )
+log.addHandler( DEBUG_HANDLER )
 
 @define
 class Config:
@@ -62,16 +59,32 @@ class ApplicationContext:
 	config: Config = field( default=None )
 	sessions: Dict[str, SynoSession] = field( factory=dict )
 
-	debug: bool = field( default=None )
+	verbose: bool = field( default=False )
+	debug: bool = field( default=False )
 
 	service: WebService = field( default=None )
 
 	def __attrs_post_init__( self ):
+		self.__configure_log__()
 		self.__load_config_files()
 
-		# reconfigure log handler
+	def __configure_log__( self ):
+		global DEFAULT_HANDLER, VERBOSE_HANDLER, DEBUG_HANDLER
 		if self.debug:
-			activate_log_handler( debug=True )
+			DEBUG_HANDLER.setLevel( DEBUG )
+			VERBOSE_HANDLER.setLevel( DISABLE )
+			DEFAULT_HANDLER.setLevel( DISABLE )
+			log.setLevel( DEBUG )
+		elif self.verbose:
+			DEBUG_HANDLER.setLevel( DISABLE )
+			VERBOSE_HANDLER.setLevel( INFO )
+			DEFAULT_HANDLER.setLevel( DISABLE )
+			log.setLevel( INFO )
+		else:
+			DEBUG_HANDLER.setLevel( DISABLE )
+			VERBOSE_HANDLER.setLevel( DISABLE )
+			DEFAULT_HANDLER.setLevel( WARNING )
+			log.setLevel( WARNING )
 
 	def __load_config_files( self ):
 		self.profiles = self.__load_file( PROFILES_FILE, Dict[str, Profile] )

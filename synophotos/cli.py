@@ -13,10 +13,11 @@ log = getLogger( __name__ )
 synophotos: Optional[SynoPhotos] = None  # global variable for functions below
 
 @group
-@option( '-d', '--debug', is_flag=True, required=False, help='outputs debug information' )
+@option( '-d', '--debug', is_flag=True, required=False, default=False, help='outputs debug information (implies --verbose)' )
+@option( '-v', '--verbose', is_flag=True, required=False, default=False, help='outputs verbose log information' )
 @pass_context
-def cli( ctx: Context, debug: bool = False ):
-	ctx.obj = ApplicationContext( debug=debug )
+def cli( ctx: Context, debug: bool, verbose: bool ):
+	ctx.obj = ApplicationContext( verbose=verbose, debug=debug )
 
 	# create (global) service (to ease login) and add to context
 	global synophotos
