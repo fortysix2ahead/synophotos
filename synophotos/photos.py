@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from json import dumps, loads
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from attrs import define, field
 from cattrs import Converter
@@ -319,47 +318,3 @@ class SynoPhotos( SynoWebService ):
 	def unshare_album( self, album_id: int ) -> SynoResponse:
 		return self.entry( SHARE_ALBUM, album_id=album_id, enabled='false' )
 
-	# old code below
-
-	def traverse_albums( self, fn_album: Callable = None, fn_item: Callable = None ) -> List[Album]:
-		albums = []
-		for album in self.list_albums():
-			# add album to album list
-			albums.append( album )
-
-			# process items in album
-			for item in self.list_items( album_id=album.id ):
-				album.items.append( item )
-				item.albums.append( album )
-
-				if fn_item:
-					fn_item( item )
-
-			# finally post process album
-			if fn_album:
-				fn_album( album )
-
-		return albums
-
-	def traverse_items( self ) -> List[Item]:
-		item_map = {}
-
-		def process_item( item: Item ):
-			if item.id not in item_map.keys():
-				item_map[item.id] = item
-
-		def process_album( album: Album ):
-			folder_items = []
-			for album_item in album.items:
-				folder_item = item_map.get( album_item.id )
-				if folder_item:
-					folder_items.append( folder_item )
-					folder_item.albums.append( album )
-				else:
-					print( 'warning: album item not in folder items -> investigate!' )
-			album.items = folder_items
-
-		self.traverse_folders( fn_item=process_item )
-		self.traverse_albums( fn_album=process_album )
-
-		return list( item_map.values() )
