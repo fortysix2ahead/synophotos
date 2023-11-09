@@ -12,6 +12,7 @@ from rich.prompt import Prompt
 from typing_extensions import Protocol
 
 from synophotos.error_codes import CODE_SUCCESS, CODE_UNKNOWN, error_codes
+from synophotos.parameters.photos import SID
 from synophotos.parameters.webservice import ENTRY_URL, LOGIN_PARAMS
 
 log = getLogger( __name__ )
@@ -122,22 +123,18 @@ class SynoWebService:
 		return self.session.device_id if self.session else None
 
 	def entry( self, payload: Dict, **kwargs ) -> SynoResponse:
-		return self.get( ENTRY_URL, payload | { '_sid': self.session_id }, **kwargs )
+		return self.get( ENTRY_URL, payload, **kwargs )
 
 	def get( self, url: str, template: Dict, **kwargs ) -> SynoResponse:
 		if self.session_id:
-			template = { **template, '_sid': self.session_id }
+			template = template | SID | { '_sid': self.session_id }
 
-		params = { **template, **kwargs }  # create variable making debugging easier
+		params = template | kwargs  # create variable making debugging easier
 
 		log.debug( f'GET {self.get_url( url )}, parameters:' )
 		log.debug( pretty_repr( params ) )
 
-		response = get(
-			url=self.get_url( url ),
-			params=params,
-			verify=True
-		)
+		response = get( url=self.get_url( url ), params=params, verify=True )
 
 		log.debug( f'Received response with status = {response.status_code}, and payload:' )
 		log.debug( pretty_repr( response.json(), max_depth=4 ) )
@@ -146,19 +143,17 @@ class SynoWebService:
 
 	def post( self, url: str, template: Dict, **kwargs ) -> SynoResponse:
 		if self.session_id:
-			template = { **template, '_sid': self.session_id }
+			template = template | SID | { '_sid': self.session_id }
+
+		params = template | kwargs  # create variable making debugging easier
 
 		log.debug( f'POST {self.get_url( url )}, parameters:' )
-		log.debug( pretty_repr( { **template, **kwargs } ) )
+		log.debug( pretty_repr( params ) )
 
-		response = post(
-			url=self.get_url( url ),
-			params={ **template, **kwargs },
-			verify=True
-		)
+		response = post( url=self.get_url( url ), params=params, verify=True )
 
 		log.debug( f'Received response with status = {response.status_code}, and payload:' )
-		log.debug( pretty_repr( response.json(), max_depth=2 ) )
+		log.debug( pretty_repr( response.json(), max_depth=4 ) )
 
 		return SynoResponse( response )
 

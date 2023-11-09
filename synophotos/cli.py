@@ -138,22 +138,31 @@ def root( ctx: ApplicationContext ):
 
 # sharing
 
-@cli.command( help='shares an album or folder' )
-@option( '-a', '--album', required=False, is_flag=True, default=False, help='shares an album', type=bool )
-@option( '-f', '--folder', required=False, is_flag=True, default=False, help='shares a folder', type=bool )
-@option( '-n', '--album-name', required=False, help='name of the album to be created when sharing a folder' )
+@cli.command( help='shares an album' )
+@option( '-id', '--album-id', required=False, is_flag=False, default=None, help='id of the album to share, if provided name will be ignored', type=int )
 @option( '-r', '--role', required=False, default='view', help='permission role, can be "view", "download" or "upload"' )
-@option( '-p', '--public', required=False, is_flag=True, help='shares an album publicly' )
-@option( '-uid', '--user-id', required=False, help='shares an album with a user with the provided id' )
-@option( '-gid', '--group-id', required=False, help='shares an album with a group with the provided id' )
-@argument( 'id', nargs=1, required=True, type=int )
+@option( '-p', '--public', required=False, is_flag=True, default=False, help='shares the album publicly' )
+@option( '-g', '--group', required=False, help='group to share with' )
+@option( '-gid', '--group-id', required=False, help='id of a group to share with' )
+@option( '-u', '--user', required=False, help='user to share with' )
+@option( '-uid', '--user-id', required=False, help='id of a user to share with´' )
+@argument( 'name', nargs=1, required=False, type=str )
 @pass_obj
-def share( ctx: ApplicationContext, album: bool, folder: bool, id: int, album_name: str = None,
-           role: str = 'view', public: bool = False, user_id: int = None, group_id: int = None ):
-	if album:
-		pp( synophotos.share_album( id, role, public, user_id, group_id ).data )
-	elif folder:
-		pp( synophotos.share_folder( id, album_name, role, public, user_id, group_id ).data )
+def share( ctx: ApplicationContext, name: str, album_id: int, role: str, public: bool, user: str, user_id: int, group: str, group_id: int ):
+	if name and not album_id:
+		album_ids = [ a.id for a in synophotos.albums( name ) ]
+	else:
+		album_ids = [ album_id ]
+
+	if group and not group_id:
+		group_id = synophotos.id_for_group( group )
+	if user and not user_id:
+		user_id = synophotos.id_for_user( user )
+
+	log.debug( f'attempting to share albums {album_ids} with user {user_id} and/or group {group_id}' )
+
+	for id in album_ids:
+		pp( synophotos.share_album( id, role, public, user_id, group_id ) )
 
 @cli.command( help='unshares an album' )
 @argument( 'album_id', nargs=1, required=True )

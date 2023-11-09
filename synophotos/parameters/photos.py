@@ -9,6 +9,7 @@ class api( Enum ):
 	browse_album='SYNO.Foto.Browse.Album'
 	browse_folder='SYNO.Foto.Browse.Folder'
 	browse_item='SYNO.Foto.Browse.Item'
+	sharing_passphrase='SYNO.Foto.Sharing.Passphrase'
 
 class category( Enum ):
 	normal='normal'
@@ -24,16 +25,17 @@ class sort_direction( Enum ):
 
 # dicts of default values from enums from above
 
+API_BROWSE_ALBUM = { api.__name__: api.browse_album.value }
+API_BROWSE_FOLDER = { api.__name__: api.browse_folder.value }
+API_BROWSE_ITEM = { api.__name__: api.browse_item.value }
+API_SHARING_PASSPHRASE = { api.__name__: api.sharing_passphrase.value }
+
 SORT_CREATE_TIME = { sort_by.__name__: sort_by.create_time.value }
 SORT_TAKENTIME = { sort_by.__name__: sort_by.takentime.value }
 SORT_ASC = { sort_direction.__name__: sort_direction.asc.value }
 
 CAT_NORMAL = { category.__name__: category.normal.value }
 CAT_SHARED = { category.__name__: category.normal_share_with_me.value }
-
-API_BROWSE_ALBUM = { api.__name__: api.browse_album.value }
-API_BROWSE_FOLDER = { api.__name__: api.browse_folder.value }
-API_BROWSE_ITEM = { api.__name__: api.browse_item.value }
 
 # urls
 
@@ -44,14 +46,16 @@ BROWSE_NORMAL_ALBUM_URL = '{url}/entry.cgi/SYNO.Foto.Browse.NormalAlbum'
 SID = { 'format': 'sid', '_sid': None }
 
 # parameter sets for various operations, this is very basic stuff
-# unfortunately the version depends on DSM version
+# unfortunately the version seems to depend on DSM version (or even client application versions)
 
-COUNT = { 'method': 'count', 'version': 1, **SID, }
-CREATE = { 'method': 'create', 'version': 1, **SID, }
-GET = { 'method': 'get', 'version': 2, **SID, }
-GET4 = { 'method': 'get', 'version': 4, **SID, }
-LIST2 = { 'method': 'list', 'version': 2, 'offset': 0, 'limit': 5000, **SID, }
-LIST4 = { 'method': 'list', 'version': 4, 'offset': 0, 'limit': 100, **SID, }
+COUNT = { 'method': 'count', 'version': 1 }
+CREATE = { 'method': 'create', 'version': 1 }
+GET = { 'method': 'get', 'version': 2 }
+GET4 = { 'method': 'get', 'version': 4 }
+LIST2 = { 'method': 'list', 'version': 2, 'offset': 0, 'limit': 5000 }
+LIST4 = { 'method': 'list', 'version': 4, 'offset': 0, 'limit': 100 }
+SET_SHARED1 = { 'method': 'set_shared', 'version': 1 }
+UPDATE1 = { 'method': 'update', 'version': 1 }
 
 # get elements
 
@@ -135,27 +139,14 @@ LIST_USER_GROUP = {
 	'team_space_sharable_list': 'false'
 }
 
-SHARE_ALBUM = {
-    **SID,
-	'api': 'SYNO.Foto.Sharing.Passphrase',
-	'method': 'set_shared',
-	'version': 1,
-	'policy': 'album',
-	'album_id': 0,
-	'enabled': 'false' # or "true"
-}
+SHARE_ALBUM = API_SHARING_PASSPHRASE | SET_SHARED1 | {'policy': 'album', 'album_id': 0, 'enabled': 'true' }
 
-UPDATE_PERMISSION = {
-    **SID,
-    'api': 'SYNO.Foto.Sharing.Passphrase',
-	'method': 'update',
-	'version': 1,
-	'passphrase': None, # \"-escaped string, is created when sharing an album, probably contains encoded album_id + policy
-	'expiration': 0, # unknown what is meant by 0, maybe seconds to expiration?
-	'permission': None, # this is a json string, with " escaped as \"
-}
+# passphrase: \"-escaped string, is created when sharing an album, probably contains encoded album_id + policy
+# expiration: unknown what is meant by 0, maybe seconds to expiration or unix timestamp to expiration?
+# permission: # this is a json string, with " escaped as \", for samples see below
+UPDATE_PERMISSION = API_SHARING_PASSPHRASE | UPDATE1 | { 'passphrase': None, 'expiration': 0, 'permission': None }
 
-SAMPLE_PERMISSION = [{
+__SAMPLE_PERMISSION = [{
     'role': 'view',
     'action': 'update',
     'member': {
@@ -164,4 +155,5 @@ SAMPLE_PERMISSION = [{
     }
 }]
 
-SAMPLE_PERMISSION_STR = r'[{\"role\": \"view\", \"action\": \"update\", \"member\": {\"type\": \"user\", \"id\": 1000}}]'
+__SAMPLE_PERMISSION_STR = r'[{\"role\": \"view\", \"action\": \"update\", \"member\": {\"type\": \"user\", \"id\": 1000}}]'
+__SAMPLE_PERMISSION_STR2 = r'"[{\"role\":\"download\",\"action\":\"update\",\"member\":{\"type\":\"user\",\"id\":1000}},{\"role\":\"view\",\"action\":\"update\",\"member\":{\"type\":\"user\",\"id\":1001}}]"'

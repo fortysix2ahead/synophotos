@@ -4,6 +4,8 @@ from json import dumps, loads
 from typing import Callable, Dict, List, Optional
 
 from attrs import define, field
+from cattrs import Converter
+from cattrs.preconf.json import make_converter
 
 from synophotos.parameters.photos import ADD_ITEM_TO_ALBUM, BROWSE_ALBUM, BROWSE_ALBUM_ALL, BROWSE_FOLDER, BROWSE_ITEM, COUNT_ALBUM, COUNT_FOLDER, COUNT_ITEM, CREATE_ALBUM, CREATE_FOLDER, GET_FOLDER, \
 	LIST_SHARED_ITEMS, LIST_USER_GROUP, \
@@ -11,6 +13,8 @@ from synophotos.parameters.photos import ADD_ITEM_TO_ALBUM, BROWSE_ALBUM, BROWSE
 from synophotos.parameters.webservice import ENTRY_URL
 from synophotos.webservice import SynoResponse, SynoWebService
 
+conv = Converter()
+jconv = make_converter()
 
 # photos-related dataclasses
 
@@ -106,28 +110,20 @@ class Album:
 	def is_shared( self ) -> bool:
 		return self.shared or self.temporary_shared
 
-
 @define
 class Member:
 	type: str = field( default='user' )  # 'user' or 'group'
 	id: int = field( default=0 )  # id of the user or group
 
-
 @define
 class Permission:
 	role: str = field( default='view' )  # can be 'download', 'view' and 'upload'
 	action: str = field( default='update' )  # 'update' ... what else is possible?
-	member: Member = field( default=Member() )  # this cannot be None
-
-	@classmethod
-	def from_str( cls, s: str ) -> List[Permission]:
-		return [SynoResponse.factory.load( obj, Permission ) for obj in loads( s.replace( r'\"', '"' ) )]
+	member: Member = field( factory=Member )  # this cannot be None
 
 	@classmethod
 	def as_str( cls, permissions: List[Permission] ) -> str:
-		# return dumps(SynoResponse.factory.dump(permissions)).replace('"', r'\"')
-		return dumps( SynoResponse.factory.dump( permissions ), separators=(',', ':') )
-
+		return jconv.dumps( permissions )
 
 # class for photos
 
@@ -261,6 +257,9 @@ class SynoPhotos( SynoWebService ):
 	def album( self, id: int ) -> Album:
 		pass
 
+	def albums( self, name: str ) -> List[Album]:
+		return self.list_albums( name, include_shared=False )
+
 	def folder( self, id: int ) -> Folder:
 		return self.get( ENTRY_URL, {**GET_FOLDER, 'id': id} ).as_obj( Folder )
 
@@ -289,15 +288,18 @@ class SynoPhotos( SynoWebService ):
 
 	# sharing
 
-	def share_album( self, album_id: int, role: str, public: bool, user_id: int, group_id: int ):
-		response = self.get( ENTRY_URL, {**SHARE_ALBUM, 'album_id': album_id, 'enabled': 'true'} )
+	def share_album( self, album_id: int, role: str, public: bool, user_id: int, group_id: int ) -> Optional[SynoResponse]:
+		if not public and not user_id and not group_id:
+			return
+
+		response = self.entry( SHARE_ALBUM, album_id=album_id, enabled='true' )
 
 		if public:
 			permissions = [Permission( role=role, member=Member( type='public' ) )]
 		elif user_id:
-			permissions = [Permission( role=role, member=Member( type='user', id=int( user_id ) ) )]
+			permissions = [Permission( role=role, member=Member( type='user', id=user_id ) )]
 		elif group_id:
-			permissions = [Permission( role=role, member=Member( type='group', id=int( group_id ) ) )]
+			permissions = [Permission( role=role, member=Member( type='group', id=group_id ) )]
 		else:
 			permissions = None
 
@@ -311,8 +313,8 @@ class SynoPhotos( SynoWebService ):
 		self.add_album_items( album, self.list_items( folder_id, True, False ) )
 		return self.share_album( album.id, role, public, user_id, group_id )
 
-	def grant_permission( self, permissions: List[Permission], passphrase: str ):
-		return self.get( ENTRY_URL, {**UPDATE_PERMISSION, 'permission': Permission.as_str( permissions ), 'passphrase': f'"{passphrase}"'} )
+	def grant_permission( self, permissions: List[Permission], passphrase: str ) -> SynoResponse:
+		return self.entry( UPDATE_PERMISSION, permission=Permission.as_str( permissions ), passphrase=f'"{passphrase}"' )
 
 	def unshare_album( self, album_id: int ):
 		return self.get( ENTRY_URL, {**SHARE_ALBUM, 'album_id': album_id, 'enabled': 'false'} ).data
