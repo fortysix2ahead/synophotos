@@ -33,23 +33,23 @@ def cli( ctx: Context, debug: bool, verbose: bool ):
 # create
 
 @cli.command( help='creates albums' )
-@option( '-f', '--folder', required=False, default=None, help='id of a folder used to populate album' )
+@option( '-f', '--folder', required=False, default=None, help='name of a folder used to populate album', type=str )
+@option( '-fid', '--folder-id', required=False, default=None, help='id of a folder used to populate album', type=int )
 @option( '-s', '--share', required=False, help='share album with users or groups', type=int )
 @argument( 'name', nargs=1, required=True )
 @pass_obj
-def create( ctx: ApplicationContext,  name: str, folder: str, share: int = None ):
+def create( ctx: ApplicationContext,  name: str, folder: str, folder_id: int, share: int = None ):
 	if folder:
-		try:
-			folder = synophotos.folder( int( folder ) )
-		except ValueError:
-			folders = synophotos.folders( folder )
-			if len( folders ) != 1:
-				print_error( f'a folder for "{name}" does either not exist or multiple folders match: use either an id or provide an unbiguous folder name' )
-				return
-			else:
-				folder = folders[0]
+		if len( folders := synophotos.folders( folder ) ) == 1:
+			folder = folders[0]
+			log.debug( f'using folder [dark_orange]{folder.name}[/dark_orange] with id {folder.id} to populate album' )
 
-		log.info( f'using folder [dark_orange]{folder.name}[/dark_orange] with id {folder.id} to populate album' )
+		else:
+			print_error( f'a folder for "{name}" does either not exist or multiple folders match: use either an id or provide an unbiguous folder name' )
+			return
+
+	elif folder_id:
+		folder = synophotos.folder( int( folder ) )
 
 	album = synophotos.create_album( name )
 	log.info( f'created album [dark_orange]{album.name}[/dark_orange] with id {album.id}' )
