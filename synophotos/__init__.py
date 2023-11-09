@@ -20,7 +20,7 @@ T = TypeVar('T')
 APPNAME = 'synophotos'
 
 CFG_DIR = user_config_dir( appname=APPNAME, roaming=True )
-CFG_FS = OSFS( root_path=CFG_DIR )
+CFG_FS = OSFS( root_path=CFG_DIR, create=True, expand_vars=True )
 
 CONFIG_FILE = 'config.yaml'
 PROFILES_FILE = 'profiles.yaml'
