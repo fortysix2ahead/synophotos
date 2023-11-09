@@ -32,24 +32,37 @@ def cli( ctx: Context, debug: bool, verbose: bool ):
 
 # create
 
-@cli.command( help='creates albums and folders' )
-@option( '-a', '--album', required=False, is_flag=True, default=False, help='creates an album', type=bool )
-@option( '-f', '--folder', required=False, is_flag=True, default=False, help='creates a folder', type=bool )
-@option( '-ff', '--from-folder', required=False, help='id of folder to populate album with' )
-@option( '-p', '--parent-id', required=False, default=0, help='parent id of the folder', type=int )
-@option( '-s', '--share-with', required=False, help='share album with', type=int )
+@cli.command( help='creates albums' )
+@option( '-f', '--folder', required=False, default=None, help='id of a folder used to populate album' )
+@option( '-s', '--share', required=False, help='share album with users or groups', type=int )
 @argument( 'name', nargs=1, required=True )
 @pass_obj
-def create( ctx: ApplicationContext, album: bool, folder: bool,
-            name: str, from_folder: int = None, parent_id: int = 0, share_with: int = None ):
-	if album:
-		album = synophotos.create_album( name )
-		if from_folder:
-			items = synophotos.list_items( from_folder, all_items=True, recursive=False )
-			synophotos.add_album_items( album, items )
-		pp( album.id )
-	elif folder:
-		pp( _ws( ctx ).create_folder( name, parent_id ) )
+def create( ctx: ApplicationContext,  name: str, folder: str, share: int = None ):
+	if folder:
+		try:
+			folder = synophotos.folder( int( folder ) )
+		except ValueError:
+			folders = synophotos.folders( folder )
+			if len( folders ) != 1:
+				print_error( f'a folder for "{name}" does either not exist or multiple folders match: use either an id or provide an unbiguous folder name' )
+				return
+			else:
+				folder = folders[0]
+
+		log.info( f'using folder [dark_orange]{folder.name}[/dark_orange] with id {folder.id} to populate album' )
+
+	album = synophotos.create_album( name )
+	log.info( f'created album [dark_orange]{album.name}[/dark_orange] with id {album.id}' )
+
+	if folder:
+		items = synophotos.list_items( folder.id, recursive=False )
+		synophotos.add_album_items( album, items )
+		log.info( f'added {len( items )} from [dark_orange]{folder.name}[/dark_orange] to album [dark_orange]{album.name}[/dark_orange]' )
+
+	if share:
+		raise NotImplementedError
+
+	pp( album.id )
 
 # count ... not sure if this is useful
 

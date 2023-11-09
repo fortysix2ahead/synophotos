@@ -264,6 +264,9 @@ class SynoPhotos( SynoWebService ):
 	def folder( self, id: int ) -> Folder:
 		return self.get( ENTRY_URL, {**GET_FOLDER, 'id': id} ).as_obj( Folder )
 
+	def folders( self, name: str ) -> List[Folder]:
+		return self.list_folders( 0, name, True )
+
 	def root_folder( self ) -> Folder:
 		return self.folder( 0 )
 
