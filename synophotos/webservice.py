@@ -2,7 +2,7 @@ from abc import abstractmethod
 from datetime import datetime, timedelta
 from logging import getLogger
 from sys import exit as sysexit
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 
 from attrs import define, field
 from cattrs import Converter
@@ -125,7 +125,7 @@ class SynoWebService:
 	def entry( self, payload: Dict, **kwargs ) -> SynoResponse:
 		return self.get( ENTRY_URL, payload, **kwargs )
 
-	def get( self, url: str, template: Dict, **kwargs ) -> SynoResponse:
+	def req( self, fn: Callable, url: str, template: Dict, **kwargs ) -> SynoResponse:
 		if self.session_id:
 			template = template | SID | { '_sid': self.session_id }
 
@@ -134,28 +134,18 @@ class SynoWebService:
 		log.debug( f'GET {self.get_url( url )}, parameters:' )
 		log.debug( pretty_repr( params ) )
 
-		response = get( url=self.get_url( url ), params=params, verify=True )
+		response: Response = fn( url=self.get_url( url ), params=params, verify=True )
 
 		log.debug( f'Received response with status = {response.status_code}, and payload:' )
 		log.debug( pretty_repr( response.json(), max_depth=4 ) )
 
 		return SynoResponse( response=response )
 
+	def get( self, url: str, template: Dict, **kwargs ) -> SynoResponse:
+		return self.req( get, url, template, **kwargs )
+
 	def post( self, url: str, template: Dict, **kwargs ) -> SynoResponse:
-		if self.session_id:
-			template = template | SID | { '_sid': self.session_id }
-
-		params = template | kwargs  # create variable making debugging easier
-
-		log.debug( f'POST {self.get_url( url )}, parameters:' )
-		log.debug( pretty_repr( params ) )
-
-		response = post( url=self.get_url( url ), params=params, verify=True )
-
-		log.debug( f'Received response with status = {response.status_code}, and payload:' )
-		log.debug( pretty_repr( response.json(), max_depth=4 ) )
-
-		return SynoResponse( response )
+		return self.req( post, url, template, **kwargs )
 
 	def get_url( self, stub: str ) -> str:
 		return stub.format( url=self.url )
