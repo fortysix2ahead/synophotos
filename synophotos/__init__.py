@@ -26,6 +26,15 @@ CONFIG_FILE = 'config.yaml'
 PROFILES_FILE = 'profiles.yaml'
 SESSIONS_FILE = 'sessions.yaml'
 
+DEFAULT_CONFIG = { 'profile': 'sample_profile' }
+DEFAULT_PROFILES = {
+	'sample_profile': {
+		'url': 'https://synology.photos.sample.server.example.com',
+		'account': 'sample_account',
+		'passowrd': 'sample_password',
+	}
+}
+
 CONVERTER = make_converter()
 
 # logging
@@ -87,8 +96,8 @@ class ApplicationContext:
 			log.setLevel( WARNING )
 
 	def __load_config_files( self ):
-		self.profiles = self.__load_file( PROFILES_FILE, Dict[str, Profile] )
-		self.config = self.__load_file( CONFIG_FILE, Config )
+		self.profiles = self.__load_file( PROFILES_FILE, Dict[str, Profile], exit_on_fail=False )
+		self.config = self.__load_file( CONFIG_FILE, Config, exit_on_fail=False )
 		self.sessions = self.__load_file( SESSIONS_FILE, Dict[str, SynoSession], False )
 
 	# noinspection PyMethodMayBeStatic

@@ -3,6 +3,7 @@ from sys import exit as sysexit
 from typing import cast, Optional
 
 from click import argument, Context, group, option, pass_context, pass_obj
+from yaml import safe_dump
 
 from synophotos import ApplicationContext
 from synophotos.photos import SynoPhotos
@@ -19,16 +20,29 @@ synophotos: Optional[SynoPhotos] = None  # global variable for functions below
 def cli( ctx: Context, debug: bool, verbose: bool ):
 	ctx.obj = ApplicationContext( verbose=verbose, debug=debug )
 
-	# create (global) service (to ease login) and add to context
-	global synophotos
-	synophotos = SynoPhotos( url=ctx.obj.url, account=ctx.obj.account, password=ctx.obj.password, session=ctx.obj.session )
-	ctx.obj.service = synophotos
+	if ctx.obj.profiles:
+		# create (global) service (to ease login) and add to context
+		global synophotos
+		synophotos = SynoPhotos( url=ctx.obj.url, account=ctx.obj.account, password=ctx.obj.password, session=ctx.obj.session )
+		ctx.obj.service = synophotos
 
-	# attempt to log in
-	if not synophotos.login( ctx.obj ):
-		#ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
-		print_error( 'failed to log in' )
-		sysexit( -1 )
+		# attempt to log in
+		if not synophotos.login( ctx.obj ):
+			#ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
+			print_error( 'failed to log in' )
+			sysexit( -1 )
+
+@cli.command( help='initializes the application' )
+@pass_obj
+def init( ctx: ApplicationContext ):
+	from synophotos import CFG_FS as fs, CONFIG_FILE, PROFILES_FILE, DEFAULT_CONFIG, DEFAULT_PROFILES
+	if not fs.exists( CONFIG_FILE ) and not fs.exists( PROFILES_FILE ):
+		fs.writetext( CONFIG_FILE, safe_dump( DEFAULT_CONFIG ) )
+		fs.writetext( PROFILES_FILE, safe_dump( DEFAULT_PROFILES ) )
+		pp( f'Sample configuration files have been created in \"{fs.getsyspath( "" )}\"' )
+		pp( f'[bold]Important:[/bold] edit those files immediately as any other subsequent commands will fail as synophotos will try to contact a non-existing server' )
+	else:
+		pp( f'Skipping initialization as configuration files already exist' )
 
 # create
 
