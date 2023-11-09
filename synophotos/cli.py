@@ -89,13 +89,13 @@ def albums( ctx: ApplicationContext, name: str, shared: bool ):
 def folders( ctx: ApplicationContext, name: str, parent_id: int, recursive: bool ):
 		print_obj( synophotos.list_folders( parent_id, name, recursive ) )
 
-@cli.command( help='lists objects' )
-@option( '-a', '--album', required=False, default=None, help='id of the parent folder', type=int )
+@cli.command( help='lists items' )
+@option( '-a', '--album', required=False, default=None, help='id of the parent album', type=int )
 @option( '-f', '--folder', required=False, default=None, help='id of the parent folder', type=int )
 @option( '-r', '--recursive', required=False, is_flag=True, default=False, help='include all folders recursively', type=bool )
 @argument( 'name', nargs=1, required=False, type=str )
 @pass_obj
-def list( ctx: ApplicationContext, album: int, folder: int, recursive: bool, name: str = None ):
+def items( ctx: ApplicationContext, album: int, folder: int, recursive: bool, name: str = None ):
 	if recursive:
 		pp( '[red]fetching items without paging and/or recursively, this might take a while ...[/red]' )
 
@@ -175,7 +175,7 @@ def identify( ctx: ApplicationContext, element: str, user: bool, group: bool, al
 def search( ctx: ApplicationContext, name: str ):
 	pp( synophotos.search( name ) )
 
-@cli.command( help='displays a selected payload (this is for development only)' )
+@cli.command( hidden=True, help='displays a selected payload (this is for development only)' )
 @argument( 'name', nargs=1, required=False )
 @pass_obj
 def payload( ctx: ApplicationContext, name: str ):
