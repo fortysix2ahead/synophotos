@@ -17,3 +17,8 @@ mkdocs:
 python:
   install:
   - requirements: requirements.txt
+  - method: pip
+    path: .
+    extra_requirements:
+      - mkdocs-click
+      - mkdocs-material
