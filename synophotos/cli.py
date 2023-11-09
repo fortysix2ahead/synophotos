@@ -165,10 +165,13 @@ def share( ctx: ApplicationContext, name: str, album_id: int, role: str, public:
 		pp( synophotos.share_album( id, role, public, user_id, group_id ) )
 
 @cli.command( help='unshares an album' )
-@argument( 'album_id', nargs=1, required=True )
+@option( '-id', '--album-id', required=False, is_flag=False, default=None, help='id of the album to unshare, if provided, name will be ignored', type=int )
+@argument( 'name', nargs=1, required=False, type=str )
 @pass_obj
-def unshare( ctx: ApplicationContext, album_id: int ):
-	pp( synophotos.unshare_album( album_id ) )
+def unshare( ctx: ApplicationContext, name: str, album_id: int ):
+	album_ids = [ album_id ] if album_id and not name else [ a.id for a in synophotos.albums( name ) ]
+	for id in album_ids:
+		pp( synophotos.unshare_album( id ) )
 
 # finder for ids
 

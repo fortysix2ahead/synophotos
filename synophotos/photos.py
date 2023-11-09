@@ -316,8 +316,8 @@ class SynoPhotos( SynoWebService ):
 	def grant_permission( self, permissions: List[Permission], passphrase: str ) -> SynoResponse:
 		return self.entry( UPDATE_PERMISSION, permission=Permission.as_str( permissions ), passphrase=f'"{passphrase}"' )
 
-	def unshare_album( self, album_id: int ):
-		return self.get( ENTRY_URL, {**SHARE_ALBUM, 'album_id': album_id, 'enabled': 'false'} ).data
+	def unshare_album( self, album_id: int ) -> SynoResponse:
+		return self.entry( SHARE_ALBUM, album_id=album_id, enabled='false' )
 
 	# old code below
 

@@ -126,15 +126,16 @@ class SynoWebService:
 		return self.get( ENTRY_URL, payload, **kwargs )
 
 	def req( self, fn: Callable, url: str, template: Dict, **kwargs ) -> SynoResponse:
+		url = self.get_url( url )
 		if self.session_id:
 			template = template | SID | { '_sid': self.session_id }
 
 		params = template | kwargs  # create variable making debugging easier
 
-		log.debug( f'GET {self.get_url( url )}, parameters:' )
+		log.debug( f'[dark_orange]{fn.__name__}[/dark_orange] {url}, parameters:' )
 		log.debug( pretty_repr( params ) )
 
-		response: Response = fn( url=self.get_url( url ), params=params, verify=True )
+		response: Response = fn( url=url, params=params, verify=True )
 
 		log.debug( f'Received response with status = {response.status_code}, and payload:' )
 		log.debug( pretty_repr( response.json(), max_depth=4 ) )
