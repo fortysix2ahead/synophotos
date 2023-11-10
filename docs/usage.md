@@ -226,7 +226,7 @@ An album can be unshared later:
 
 ```bash
 >> synophotos unshare holiday
-````
+```
 
 ## Other Commands
 
