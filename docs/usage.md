@@ -177,3 +177,73 @@ To display information about groups and users, use the commands `users`:
   65536 │ 'family'         │ 'group'
   100   │ 'users'          │ 'group'
 ```
+
+## Creating Albums
+
+Synophotos allows creating and populating albums from existing content. The command for doing that is `create`. This will create an empty album and return the
+is of the album.
+
+```bash
+>> synophotos create Holiday
+35
+```
+
+It's also possible to populate the album from existing content. Provide a folder or a folder id and all photos of that folder will be added to the newly
+created album:
+
+```bash
+>> synophotos create -f holidays Holiday
+35
+>> synophotos create -fid 14 Holiday
+36
+```
+
+## Sharing Albums
+
+Albums can be shared and unshared. For doing that the commands `share` and `unshare` exist. To share an album publicly use the `-p` switch. You must provide
+either an album name or an id. In addition, you need to provide a role, which can be `view`, `download` or `upload`.
+
+```bash
+>> synophotos share -r view holiday
+>> synophotos share -id 35 -p -r view
+```
+
+To share an album with certain user, provide the name of a user or its id:
+
+```bash
+>> synophotos share -r view -u bethany holiday
+>> synophotos share -r view -uid 1001 holiday
+```
+
+This works with groups as well:
+
+```bash
+>> synophotos share -r view -g family holiday
+>> synophotos share -r view -gid 65536 holiday
+```
+
+An album can be unshared later:
+
+```bash
+>> synophotos unshare holiday
+````
+
+## Other Commands
+
+There are some other commands, that might come handy from time to time.
+
+### Profiles
+
+To display the currently active profile, use the `profile` command:
+
+```bash
+>> synophotos profile
+bethany
+```
+
+## Hidden Commands
+
+Some commands are hidden from the user interface as they are either not finished or are not intended to be used by the end user. Currently, these commands are:
+
+- `payload`: For displaying the payload that is sent to the server. This is for development only!
+- `search`: For searching things on the server. In general this already works, but the results are not display in a nice way.
