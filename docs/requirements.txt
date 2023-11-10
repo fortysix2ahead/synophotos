@@ -8,3 +8,4 @@ mkdocs-material
 platformdirs
 requests
 rich
+typing_extensions
