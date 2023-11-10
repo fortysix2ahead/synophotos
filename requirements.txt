@@ -9,3 +9,4 @@ platformdirs~=3.11.0
 requests~=2.31.0
 rich~=13.6.0
 setuptools~=68.2.2
+typing_extensions~=4.8.0
