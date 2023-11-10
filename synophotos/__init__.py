@@ -1,3 +1,4 @@
+"""Synophotos - Synology Photos Command Line Interface"""
 
 from logging import DEBUG, INFO, WARNING, getLogger
 from sys import exit as sysexit
@@ -12,6 +13,8 @@ from rich.logging import RichHandler
 
 from synophotos.ui import dataclass_table
 from synophotos.webservice import SynoSession, WebService
+
+__version__ = '0.1.0'
 
 log = getLogger( __name__ )
 
