@@ -3,6 +3,12 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2023-11-11
+
+### Fixed
+
+- removed leftover references to ctx objects, which caused a crash when credentials were wrong
+
 ## [0.1.1] - 2023-11-10
 
 ### Fixed
