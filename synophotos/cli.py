@@ -5,6 +5,7 @@ from typing import cast, Optional
 from click import argument, Context, group, option, pass_context, pass_obj
 from yaml import safe_dump
 
+from synophotos import __version__
 from synophotos import ApplicationContext
 from synophotos.photos import SynoPhotos
 from synophotos.ui import pprint as pp, print_error, print_obj, table_for
@@ -231,7 +232,7 @@ def payload( ctx: ApplicationContext, name: str ):
 @cli.command( help='prints version information' )
 @pass_obj
 def version( ctx: ApplicationContext ):
-	pp( '0.1.0' )
+	pp( __version__ )
 
 # helper
 
