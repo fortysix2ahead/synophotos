@@ -14,6 +14,7 @@ from typing_extensions import Protocol
 from synophotos.error_codes import CODE_SUCCESS, CODE_UNKNOWN, error_codes
 from synophotos.parameters.photos import SID
 from synophotos.parameters.webservice import ENTRY_URL, LOGIN_PARAMS
+from synophotos.ui import print_error
 
 log = getLogger( __name__ )
 
@@ -154,7 +155,7 @@ class SynoWebService:
 	def login( self, ctx, otp_code: str = None ) -> SynoSession:
 		# todo: check if saved session has been expired, but unclear how to detect that
 		if self.session and self.session.is_valid():
-			log.debug( f'reusing session with SID = {self.session.sid}, created at {self.session.updated_at}' )
+			log.info( f'reusing session with SID = {self.session.sid}, created at {self.session.updated_at}' )
 			return self.session
 
 		self.session = self._login()
@@ -163,12 +164,12 @@ class SynoWebService:
 				otp_token = Prompt.ask( 'Service responded with HTTP 403, 2FA seems to be enabled, please enter 2FA code' )
 				self.session = self._login( otp_token )
 				if not self.session.is_valid():
-					ctx.console.print( f'error logging in: code={self.session.error_code}, msg={self.session.error_msg}' )
+					print_error( f'unable to log in: code={self.session.error_code}, msg={self.session.error_msg}' )
 					sysexit( -1 )
 				else:
-					log.debug( f'created new session with SID = {self.session.sid}' )
+					log.info( f'created new session with SID = {self.session.sid}' )
 			else:
-				ctx.console.print( f'error logging in: code={self.session.error_code}, msg={self.session.error_msg}' )
+				print_error( f'unable to log in: code={self.session.error_code}, msg={self.session.error_msg}' )
 				sysexit( -1 )
 
 		save_session = True  # todo: make this configurable?
