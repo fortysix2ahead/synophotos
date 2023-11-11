@@ -29,6 +29,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "bumpver~=2023.1129",
+  "flit~=3.9.0",
   "mkdocs~=1.5.3",
   "mkdocs-click~=0.8.1",
   "mkdocs-material~=9.4.7"
@@ -53,7 +54,7 @@ build-backend = "flit_core.buildapi"
 current_version = "0.1.1"
 version_pattern = "MAJOR.MINOR.PATCH[-INC0]"
 commit_message = "Increased version from {old_version} to {new_version}"
-tag_message = "rel{new_version}"
+tag_message = "rel-{new_version}"
 tag_scope = "default"
 pre_commit_hook = ""
 post_commit_hook = ""
