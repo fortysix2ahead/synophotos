@@ -28,10 +28,10 @@ Initialize the application:
 
 ```bash
 > synophotos init
-Sample configuration files can been created in "$USER_CONFIG/synophotos/"
+A sample configuration file has been created in "$USER_CONFIG/synophotos/"
 ```
 
-Edit the two files found in `$USER_CONFIG/synophotos/` and insert your server URL and credentials.
+Edit the file `config.yaml` found in `$USER_CONFIG/synophotos/` and insert your server URL and credentials.
 
 Run synophotos to check what albums you have:
 
