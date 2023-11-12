@@ -36,14 +36,14 @@ def cli( ctx: Context, debug: bool, verbose: bool ):
 @cli.command( help='initializes the application' )
 @pass_obj
 def init( ctx: ApplicationContext ):
-	from synophotos import CFG_FS as fs, CONFIG_FILE, PROFILES_FILE, DEFAULT_CONFIG, DEFAULT_PROFILES
-	if not fs.exists( CONFIG_FILE ) and not fs.exists( PROFILES_FILE ):
+	from synophotos import CFG_FS as fs, CONFIG_FILE, DEFAULT_CONFIG
+	if not fs.exists( CONFIG_FILE ):
 		fs.writetext( CONFIG_FILE, safe_dump( DEFAULT_CONFIG ) )
-		fs.writetext( PROFILES_FILE, safe_dump( DEFAULT_PROFILES ) )
-		pp( f'Sample configuration files have been created in \"{fs.getsyspath( "" )}\"' )
-		pp( f'[bold]Important:[/bold] edit those files immediately as any other subsequent commands will fail as synophotos will try to contact a non-existing server' )
+		config_path = fs.getsyspath( f'{CONFIG_FILE}' )
+		pp( f'Sample configuration has been created in \"{config_path}\"' )
+		pp( f'[bold]Important:[/bold] edit this file immediately as any subsequent commands will fail as synophotos will try to contact a non-existing server' )
 	else:
-		pp( f'Skipping initialization as configuration files already exist' )
+		log.info( f'Skipping initialization as configuration file already exist' )
 
 # create
 

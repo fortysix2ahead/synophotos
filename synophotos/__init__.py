@@ -26,15 +26,16 @@ CFG_DIR = user_config_dir( appname=APPNAME, roaming=True )
 CFG_FS = OSFS( root_path=CFG_DIR, create=True, expand_vars=True )
 
 CONFIG_FILE = 'config.yaml'
-PROFILES_FILE = 'profiles.yaml'
 SESSIONS_FILE = 'sessions.yaml'
 
-DEFAULT_CONFIG = { 'profile': 'sample_profile' }
-DEFAULT_PROFILES = {
-	'sample_profile': {
-		'url': 'https://synology.photos.sample.server.example.com',
-		'account': 'sample_account',
-		'passowrd': 'sample_password',
+DEFAULT_CONFIG = {
+	'profile': 'sample_profile',
+	'profiles': {
+		'sample_profile': {
+			'url': 'https://synology.photos.sample.server.example.com',
+			'account': 'sample_account',
+			'password': 'sample_password',
+		}
 	}
 }
 
@@ -106,7 +107,7 @@ class ApplicationContext:
 
 	def __load_config_files( self ):
 		self.config = self.__load_file( CONFIG_FILE, Config, exit_on_fail=False )
-		self.sessions = self.__load_file( SESSIONS_FILE, Dict[str, SynoSession], False )
+		# self.sessions = self.__load_file( SESSIONS_FILE, Dict[str, SynoSession], False )
 
 	# noinspection PyMethodMayBeStatic
 	def __load_file( self, filename: str, cls: Type[T] = None, exit_on_fail: bool = True ) -> Optional[T]:
@@ -116,7 +117,7 @@ class ApplicationContext:
 			log.debug( f'unable to read file {filename}', exc_info=True )
 			if exit_on_fail:
 				sysexit( -1 )
-			return {}
+			return Config()
 
 	@property
 	def url( self ) -> str:
