@@ -52,12 +52,6 @@ log.addHandler( VERBOSE_HANDLER )
 log.addHandler( DEBUG_HANDLER )
 
 @define
-class Config:
-
-	profile: str = field( default=None )
-	debug: bool = field( default=False )
-
-@define
 class Profile:
 
 	url: str = field( default=None )
@@ -65,10 +59,22 @@ class Profile:
 	password: str = field( default=None )
 
 @define
+class Config:
+
+	debug: bool = field( default=False )
+	verbose: bool = field( default=False )
+
+	profile: str = field( default=None )
+	profiles: Dict[str, Profile] = field( factory=dict )
+
+	@property
+	def active_profile( self ) -> Optional[Profile]:
+		return self.profiles.get( self.profile )
+
+@define
 class ApplicationContext:
 
-	profiles: Dict[str, Profile] = field( factory=dict )
-	config: Config = field( default=None )
+	config: Config = field( factory=Config )
 	sessions: Dict[str, SynoSession] = field( factory=dict )
 
 	verbose: bool = field( default=False )
@@ -99,7 +105,6 @@ class ApplicationContext:
 			log.setLevel( WARNING )
 
 	def __load_config_files( self ):
-		self.profiles = self.__load_file( PROFILES_FILE, Dict[str, Profile], exit_on_fail=False )
 		self.config = self.__load_file( CONFIG_FILE, Config, exit_on_fail=False )
 		self.sessions = self.__load_file( SESSIONS_FILE, Dict[str, SynoSession], False )
 
@@ -115,15 +120,15 @@ class ApplicationContext:
 
 	@property
 	def url( self ) -> str:
-		return self.profiles.get( self.config.profile ).url
+		return self.config.active_profile.url
 
 	@property
 	def account( self ) -> str:
-		return self.profiles.get( self.config.profile ).account
+		return self.config.active_profile.account
 
 	@property
 	def password( self ) -> str:
-		return self.profiles.get( self.config.profile ).password
+		return self.config.active_profile.password
 
 	@property
 	def session( self ) -> SynoSession:

@@ -21,7 +21,7 @@ synophotos: Optional[SynoPhotos] = None  # global variable for functions below
 def cli( ctx: Context, debug: bool, verbose: bool ):
 	ctx.obj = ApplicationContext( verbose=verbose, debug=debug )
 
-	if ctx.obj.profiles:
+	if ctx.obj.config.active_profile:
 		# create (global) service (to ease login) and add to context
 		global synophotos
 		synophotos = SynoPhotos( url=ctx.obj.url, account=ctx.obj.account, password=ctx.obj.password, session=ctx.obj.session )
