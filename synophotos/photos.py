@@ -2,15 +2,16 @@ from __future__ import annotations
 
 from json import dumps, loads
 from logging import getLogger
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Literal, Optional
 
 from attrs import define, field
 from cattrs import Converter
 from cattrs.preconf.json import make_converter
 from fs.osfs import OSFS
 
-from synophotos.parameters.photos import ADD_ITEM_TO_ALBUM, BROWSE_ALBUM, BROWSE_ALBUM_ALL, BROWSE_FOLDER, BROWSE_ITEM, COUNT_ALBUM, COUNT_FOLDER, COUNT_ITEM, CREATE_ALBUM, CREATE_FOLDER, GET_FOLDER, \
-	LIST_SHARED_ITEMS, LIST_USER_GROUP, \
+from synophotos.parameters.photos import ADD_ITEM_TO_ALBUM, BROWSE_ALBUM, BROWSE_ALBUM_ALL, BROWSE_FOLDER, BROWSE_ITEM, COUNT_ALBUM, COUNT_FOLDER, COUNT_ITEM, CREATE_ALBUM, CREATE_FOLDER, \
+	DOWNLOAD_ITEM, DOWNLOAD_SHARED_ITEM, DOWNLOAD_THUMBNAIL, GET_FOLDER, \
+	GET_ITEM, LIST_SHARED_ITEMS, LIST_USER_GROUP, \
 	SEARCH_ITEM, SHARE_ALBUM, UPDATE_PERMISSION
 from synophotos.parameters.webservice import ENTRY_URL
 from synophotos.webservice import SynoResponse, SynoWebService
@@ -23,6 +24,18 @@ jconv = make_converter()
 # photos-related dataclasses
 
 @define
+class Additional:
+	description: str = field( default=None )
+	exif: Dict = field( factory=dict )
+	orientation: int = field( default=None )
+	orientation_original: int = field( default=None )
+	person: List = field( default=list )
+	rating: int = field( default=None )
+	resolution: Dict[str, int] = field( factory=dict )
+	tag: List[str] = field( factory=list )
+	thumbnail: Dict = field( factory=dict )
+
+@define
 class Item:
 	filename: str = field( default=None )
 	filesize: int = field( default=None )
@@ -33,7 +46,7 @@ class Item:
 	indexed_time: int = field( default=None )
 	type: str = field( default=None )
 	live_type: str = field( default=None )
-	additional: List[str] = field( default=None )
+	additional: Additional = field( factory=Additional )
 
 	# additional fields
 	# folder: Folder = field( init=False, default=None )
@@ -267,7 +280,23 @@ class SynoPhotos( SynoWebService ):
 		for i in items:
 			path = f'{i.folder_id}/{i.id}_{i.filename.lower()}'
 			if not fs.exists( path ):
-				print( path )
+				self.download( i.id )
+				return
+
+	def download( self, item_id: int, thumbnail: Optional[Literal['sm','m','xl']] = None ) -> bytes:
+		for i in self.item( item_id ):
+			if thumbnail:
+				response = self.entry( DOWNLOAD_THUMBNAIL, id=item_id, cache_key=i.additional.thumbnail.get( 'cache_key' ) )
+			else:
+				raise NotImplementedError
+				# todo: according to zeichensatz documentation this should work, but it does not
+				# https://<IP_ADDRESS>/photo/webapi/entry.cgi?cache_key="40808_1633659236"&unit_id=[40808]&api="SYNO.FotoTeam.Download"&method="download"&version=1
+				# it might work by bypassing the api, but in this case we need to provide the SynoToken
+				# https://<IP_ADDRESS>/photo/webapi/entry.cgi?cache_key="80719_1633863542"&unit_id=[80719]&api=SYNO.Foto.Download&method=download&version=1&SynoToken=pSAYNF9UTBZQA
+				# response = self.entry( DOWNLOAD_ITEM, id=f'"{item_id}"' )
+				# response = self.entry( DOWNLOAD_SHARED_ITEM, unit_id=f'"[{item_id}]"', cache_key=i.additional.thumbnail.get( 'cache_key' ) )
+
+			return response.response.content
 
 	# helpers
 
@@ -282,6 +311,9 @@ class SynoPhotos( SynoWebService ):
 
 	def folders( self, name: str ) -> List[Folder]:
 		return self.list_folders( 0, name, True )
+
+	def item( self, id: int ) -> List[Item]:
+		return self.entry( GET_ITEM, id=f'[{id}]' ).as_obj( List[Item] )
 
 	def root_folder( self ) -> Folder:
 		return self.folder( 0 )

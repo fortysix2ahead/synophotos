@@ -215,6 +215,18 @@ def identify( ctx: ApplicationContext, element: str, user: bool, group: bool, al
 def search( ctx: ApplicationContext, name: str ):
 	pp( synophotos.search( name ) )
 
+
+@cli.command( help='download items' )
+@option( '-s', '--size', required=False, default='original', help='download image in specified size, can be one of [sm, m, xl, original]' )
+@argument( 'id', nargs=1, required=True )
+@pass_obj
+def download( ctx: ApplicationContext, id: int, size: str ):
+	if size == 'original':
+		size = 'xl'
+		log.warning( 'download original size of images is currently broken, falling back to XL thmubnails' )
+
+	synophotos.download( id, thumbnail=size )
+
 @cli.command( help='sync' )
 @option( '-a', '--album', required=True, is_flag=True, help='sync a provided album' )
 @option( '-d', '--destination', required=True, is_flag=False, help='destination folder to sync to' )

@@ -1,7 +1,13 @@
 
 from enum import Enum
+from typing import Dict
+
 
 # todo: not sure if this can be structured in a nicer way, it feels like a lot of boilerplate stuff
+
+# little helper for keywords to dict
+def kwd( **kwargs ) -> Dict:
+	return { **kwargs }
 
 # enums to store different allowed 'field values'
 
@@ -9,7 +15,10 @@ class api( Enum ):
 	browse_album='SYNO.Foto.Browse.Album'
 	browse_folder='SYNO.Foto.Browse.Folder'
 	browse_item='SYNO.Foto.Browse.Item'
+	download='SYNO.Foto.Download'
+	download_shared='SYNO.FotoTeam.Download'
 	sharing_passphrase='SYNO.Foto.Sharing.Passphrase'
+	thumbnail='SYNO.Foto.Thumbnail'
 
 class category( Enum ):
 	normal='normal'
@@ -28,7 +37,10 @@ class sort_direction( Enum ):
 API_BROWSE_ALBUM = { api.__name__: api.browse_album.value }
 API_BROWSE_FOLDER = { api.__name__: api.browse_folder.value }
 API_BROWSE_ITEM = { api.__name__: api.browse_item.value }
+API_DOWNLOAD = { api.__name__: api.download.value }
+API_DOWNLOAD_SHARED = { api.__name__: api.download_shared.value }
 API_SHARING_PASSPHRASE = { api.__name__: api.sharing_passphrase.value }
+API_THUMBNAIL = { api.__name__: api.thumbnail.value }
 
 SORT_CREATE_TIME = { sort_by.__name__: sort_by.create_time.value }
 SORT_TAKENTIME = { sort_by.__name__: sort_by.takentime.value }
@@ -50,8 +62,12 @@ SID = { 'format': 'sid', '_sid': None }
 
 COUNT = { 'method': 'count', 'version': 1 }
 CREATE = { 'method': 'create', 'version': 1 }
-GET = { 'method': 'get', 'version': 2 }
+DOWNLOAD1 = { 'method': 'download', 'version': 1 }
+DOWNLOAD2 = { 'method': 'download', 'version': 2 }
+GET1 = { 'method': 'get', 'version': 1 }
+GET2 = { 'method': 'get', 'version': 2 }
 GET4 = { 'method': 'get', 'version': 4 }
+GET5 = { 'method': 'get', 'version': 5 }
 LIST2 = { 'method': 'list', 'version': 2, 'offset': 0, 'limit': 5000 }
 LIST4 = { 'method': 'list', 'version': 4, 'offset': 0, 'limit': 100 }
 SET_SHARED1 = { 'method': 'set_shared', 'version': 1 }
@@ -61,6 +77,17 @@ UPDATE1 = { 'method': 'update', 'version': 1 }
 
 GET_ALBUM = API_BROWSE_ALBUM | GET4 | { 'id': '[0]', 'additional': '["sharing_info"]' }
 GET_SHARED_ALBUM = API_BROWSE_ALBUM | GET4 | { 'passphrase': '', 'additional': '["sharing_info"]' }
+GET_ITEM = API_BROWSE_ITEM | GET5 | {
+	'id': '[0]',
+	'additional': '["description","tag","exif","resolution","orientation","gps","video_meta","video_convert","thumbnail","address","geocoding_id","rating","motion_photo","person"]'
+}
+
+# download item
+
+# DOWNLOAD_ITEM = API_DOWNLOAD | DOWNLOAD1 | { 'force_download': 'true', 'item_id': '"[0]"', 'download_type': 'source' }
+DOWNLOAD_ITEM = API_DOWNLOAD | GET1 | { 'mode': 'download', 'id': ..., 'type': 'source' }
+DOWNLOAD_SHARED_ITEM = API_DOWNLOAD_SHARED | DOWNLOAD1 | { 'unit_id': '"[...]"', 'cache_key': ... } # + cache_key="40808_1633659236" ???
+DOWNLOAD_THUMBNAIL = API_THUMBNAIL | GET1 | { 'mode': 'download', 'id': ..., 'type': 'unit', 'size': 'xl', 'cache_key': ... }
 
 # browse/list elements
 
@@ -104,7 +131,7 @@ GET_FOLDER = {
     'api': 'SYNO.Foto.Browse.Folder',
     'id': 0,
     'additional': '["access_permission"]', # ???
-    **GET,
+    **GET2,
 }
 
 CREATE_ALBUM = {
