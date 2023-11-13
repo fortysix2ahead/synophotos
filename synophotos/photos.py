@@ -287,7 +287,12 @@ class SynoPhotos( SynoWebService ):
 	# helpers
 
 	def album( self, id: int ) -> Album:
-		return first( self.entry( GET_ALBUM, id=f'[{id}]' ).as_obj( List[Album] ) )
+		album = first( self.entry( GET_ALBUM, id=f'[{id}]' ).as_obj( List[Album] ), None )
+		if not album: # no album, try again with shared albums
+			albums = self.list_albums( name=None, include_shared=True )
+			if album := first( [a for a in albums if id == a.id], None ):
+				album = first( self.entry( GET_SHARED_ALBUM, passphrase=album.passphrase ).as_obj( List[Album] ) )
+		return album
 
 	def albums( self, name: str ) -> List[Album]:
 		return self.list_albums( name, include_shared=False )

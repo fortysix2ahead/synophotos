@@ -77,7 +77,7 @@ UPDATE1 = { 'method': 'update', 'version': 1 }
 
 GET_ALBUM = API_BROWSE_ALBUM | GET4 | { 'id': '[0]', 'additional': '["sharing_info","flex_section","provider_count","thumbnail"]' }
 GET_FOLDER = API_BROWSE_FOLDER | GET2 | { 'id': ..., 'additional': '["access_permission"]' } # id is an int, not a list!
-GET_SHARED_ALBUM = API_BROWSE_ALBUM | GET4 | { 'passphrase': '', 'additional': '["sharing_info"]' }
+GET_SHARED_ALBUM = API_BROWSE_ALBUM | GET4 | { 'passphrase': ..., 'additional': '["sharing_info","flex_section","provider_count","thumbnail"]' } # id is missing in favour of the passphrase!
 GET_ITEM = API_BROWSE_ITEM | GET5 | {
 	'id': '[0]',
 	'additional': '["description","tag","exif","resolution","orientation","gps","video_meta","video_convert","thumbnail","address","geocoding_id","rating","motion_photo","person"]'
