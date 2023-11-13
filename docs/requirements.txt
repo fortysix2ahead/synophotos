@@ -5,6 +5,7 @@ fs
 mkdocs
 mkdocs-click
 mkdocs-material
+more-itertools
 platformdirs
 requests
 rich

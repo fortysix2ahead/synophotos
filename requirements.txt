@@ -5,6 +5,7 @@ fs~=2.4.16
 mkdocs~=1.5.3
 mkdocs-click~=0.8.1
 mkdocs-material~=9.4.7
+more-itertools ~= 10.1.0
 platformdirs~=3.11.0
 requests~=2.31.0
 rich~=13.6.0
