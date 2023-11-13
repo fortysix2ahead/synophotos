@@ -1,6 +1,8 @@
 from dataclasses import fields
 from typing import Any, List, Optional, Type
 
+from attrs import fields
+
 from rich import box
 from rich.console import Console
 from rich.pretty import Pretty, pretty_repr
@@ -14,6 +16,9 @@ blue = Style( color='blue' )
 def pprint( item: Any ):
 	cs.print( item )
 
+def print_obj_table( obj: Any ):
+	cs.print( obj_table( obj ) )
+
 def print_obj( obj: Any ) -> None:
 		if isinstance( obj, list ):
 			pprint( dataclass_table( obj ) )
@@ -24,6 +29,16 @@ def print_error( msg: str ):
 	cs.print( f'[red]Error:[/red] {msg}' )
 
 #
+
+def obj_table( obj: Any ) -> Table:
+	table = Table( box=box.MINIMAL, show_header=True, show_footer=False )
+	[ table.add_column( c, header_style=blue ) for c in ['attribute', 'value'] ]
+
+	attributes = sorted( fields( obj.__class__ ), key=lambda f: f.name )
+	for a in attributes:
+		table.add_row( Pretty( a.name ), Pretty( getattr( obj, a.name ) ) )
+
+	return table
 
 def table_for( cols: List, rows: List[List] ) -> Table:
 	table = Table( box=box.MINIMAL, show_header=True, show_footer=False )
