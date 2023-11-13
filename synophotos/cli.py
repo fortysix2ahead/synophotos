@@ -224,7 +224,7 @@ def search( ctx: ApplicationContext, name: str ):
 def download( ctx: ApplicationContext, destination: str, id: int, size: ThumbnailSize ):
 	if size == 'original':
 		size = 'xl'
-		log.warning( 'download original size of images is currently broken, falling back to XL thumbnails' )
+		log.warning( 'download original images is currently not supported, falling back to XL thumbnails' )
 
 	fs = OSFS( root_path=destination, expand_vars=True, create=True )
 
