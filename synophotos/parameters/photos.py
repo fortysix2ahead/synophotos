@@ -75,7 +75,7 @@ UPDATE1 = { 'method': 'update', 'version': 1 }
 
 # get elements
 
-GET_ALBUM = API_BROWSE_ALBUM | GET4 | { 'id': '[0]', 'additional': '["sharing_info"]' }
+GET_ALBUM = API_BROWSE_ALBUM | GET4 | { 'id': '[0]', 'additional': '["sharing_info","flex_section","provider_count","thumbnail"]' }
 GET_SHARED_ALBUM = API_BROWSE_ALBUM | GET4 | { 'passphrase': '', 'additional': '["sharing_info"]' }
 GET_ITEM = API_BROWSE_ITEM | GET5 | {
 	'id': '[0]',

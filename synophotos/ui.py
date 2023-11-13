@@ -2,6 +2,7 @@ from dataclasses import fields
 from typing import Any, List, Optional, Type
 
 from attrs import fields
+from attrs.exceptions import NotAnAttrsClassError
 
 from rich import box
 from rich.console import Console
@@ -34,10 +35,13 @@ def obj_table( obj: Any ) -> Table:
 	table = Table( box=box.MINIMAL, show_header=True, show_footer=False )
 	[ table.add_column( c, header_style=blue ) for c in ['attribute', 'value'] ]
 
-	attributes = sorted( fields( obj.__class__ ), key=lambda f: f.name )
-	for a in attributes:
-		table.add_row( Pretty( a.name ), Pretty( getattr( obj, a.name ) ) )
-
+	try:
+		attributes = sorted( fields( obj.__class__ ), key=lambda f: f.name )
+		for a in attributes:
+			table.add_row( Pretty( a.name ), Pretty( getattr( obj, a.name ) ) )
+	except NotAnAttrsClassError:
+		pass
+	
 	return table
 
 def table_for( cols: List, rows: List[List] ) -> Table:
