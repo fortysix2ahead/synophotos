@@ -37,11 +37,17 @@ def obj_table( obj: Any ) -> Table:
 
 	try:
 		attributes = sorted( fields( obj.__class__ ), key=lambda f: f.name )
+
+		# append additional to the end of the list
+		if additional := next( iter( [ a for a in attributes if a.name == 'additional' ] ), None ):
+			attributes.remove( additional )
+			attributes.append( additional )
+
 		for a in attributes:
 			table.add_row( Pretty( a.name ), Pretty( getattr( obj, a.name ) ) )
 	except NotAnAttrsClassError:
 		pass
-	
+
 	return table
 
 def table_for( cols: List, rows: List[List] ) -> Table:
