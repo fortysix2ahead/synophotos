@@ -237,17 +237,20 @@ def download( ctx: ApplicationContext, destination: str, id: int, size: Thumbnai
 
 @cli.command( help='displays information on items, folder and albums (this is mainly for development)' )
 @option( '-a', '--album-id', required=False, is_flag=True, default=False, help='treat provided id as album id' )
+@option( '-f', '--folder-id', required=False, is_flag=True, default=False, help='treat provided id as folder id' )
 @option( '-i', '--item-id', required=False, is_flag=True, default=False, help='treat provided id as item id (this is the default)' )
 @argument( 'id', nargs=1, required=False, type=int )
 @pass_obj
-def show( ctx: ApplicationContext, album_id: bool, item_id: bool, id: int ):
-	if not album_id and not item_id:
+def show( ctx: ApplicationContext, album_id: bool, folder_id, item_id: bool, id: int ):
+	if not album_id and not folder_id and not item_id:
 		item_id = True
 
 	if item_id:
 		print_obj_table( synophotos.item( id ) )
 	elif album_id:
 		print_obj_table( synophotos.album( id ) )
+	elif folder_id:
+		print_obj_table( synophotos.folder( id ) )
 
 @cli.command( hidden=True, help='displays a selected payload (this is for development only)' )
 @argument( 'name', nargs=1, required=False )

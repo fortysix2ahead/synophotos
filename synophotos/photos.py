@@ -23,16 +23,17 @@ jconv = make_converter()
 
 @define
 class Additional:
+	access_permission: Dict = field( default=None ) # folder only?
 	description: str = field( default=None )
 	exif: Dict = field( factory=dict )
-	flex_section: List[int] = field( factory=list ) # album
+	flex_section: List[int] = field( factory=list ) # album only?
 	orientation: int = field( default=None )
 	orientation_original: int = field( default=None )
 	person: List = field( default=list ) # that's of type class???
 	provider_count: int = field( default=None )
 	rating: int = field( default=None )
 	resolution: Dict[str, int] = field( factory=dict )
-	sharing_info: Dict = field( factory=dict ) # album
+	sharing_info: Dict = field( factory=dict ) # album only?
 	tag: List[str] = field( factory=list )
 	thumbnail: Dict = field( factory=dict )
 

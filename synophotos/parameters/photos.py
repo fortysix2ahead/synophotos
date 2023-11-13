@@ -76,6 +76,7 @@ UPDATE1 = { 'method': 'update', 'version': 1 }
 # get elements
 
 GET_ALBUM = API_BROWSE_ALBUM | GET4 | { 'id': '[0]', 'additional': '["sharing_info","flex_section","provider_count","thumbnail"]' }
+GET_FOLDER = API_BROWSE_FOLDER | GET2 | { 'id': ..., 'additional': '["access_permission"]' } # id is an int, not a list!
 GET_SHARED_ALBUM = API_BROWSE_ALBUM | GET4 | { 'passphrase': '', 'additional': '["sharing_info"]' }
 GET_ITEM = API_BROWSE_ITEM | GET5 | {
 	'id': '[0]',
@@ -126,13 +127,6 @@ COUNT_ITEM_FOLDER = { 'folder_id': 0, **COUNT_ITEM, }
 COUNT_ITEM_ALBUM = { 'album_id': 0, **COUNT_ITEM, }
 
 #
-
-GET_FOLDER = {
-    'api': 'SYNO.Foto.Browse.Folder',
-    'id': 0,
-    'additional': '["access_permission"]', # ???
-    **GET2,
-}
 
 CREATE_ALBUM = {
     **CREATE,
