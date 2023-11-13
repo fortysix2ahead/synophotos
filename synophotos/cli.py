@@ -3,11 +3,12 @@ from sys import exit as sysexit
 from typing import cast, Optional
 
 from click import argument, Context, group, option, pass_context, pass_obj
+from fs.osfs import OSFS
 from yaml import safe_dump
 
 from synophotos import __version__
 from synophotos import ApplicationContext
-from synophotos.photos import SynoPhotos
+from synophotos.photos import Item, SynoPhotos, ThumbnailSize
 from synophotos.ui import pprint as pp, print_error, print_obj, table_for
 
 log = getLogger( __name__ )
@@ -214,6 +215,25 @@ def identify( ctx: ApplicationContext, element: str, user: bool, group: bool, al
 @pass_obj
 def search( ctx: ApplicationContext, name: str ):
 	pp( synophotos.search( name ) )
+
+@cli.command( help='download items' )
+@option( '-d', '--destination', required=True, help='destination folder for downloaded items' )
+@option( '-s', '--size', required=False, default='original', help='download image in specified size, can be one of [sm, m, xl, original]' )
+@argument( 'id', nargs=1, required=True )
+@pass_obj
+def download( ctx: ApplicationContext, destination: str, id: int, size: ThumbnailSize ):
+	if size == 'original':
+		size = 'xl'
+		log.warning( 'download original size of images is currently broken, falling back to XL thumbnails' )
+
+	fs = OSFS( root_path=destination, expand_vars=True, create=True )
+
+	item, contents = synophotos.download( id, thumbnail=size )
+	folder = synophotos.folder( item.folder_id )
+
+	fs.makedirs( folder.name, recreate=True )
+	fs.writebytes( path=f'{folder.name}/{item.filename}', contents=contents )
+	log.info( f'downloaded item {item.id} to: {folder.name}/{item.filename}, wrote {len( contents )} bytes' )
 
 @cli.command( hidden=True, help='displays a selected payload (this is for development only)' )
 @argument( 'name', nargs=1, required=False )

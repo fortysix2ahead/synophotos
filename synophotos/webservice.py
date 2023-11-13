@@ -63,6 +63,9 @@ class SynoResponse:
 		except JSONDecodeError:
 			self.success = False
 
+	def as_bytes( self ) -> bytes:
+		return self.response.content
+
 	def as_list( self, cls: Type[T] ) -> List[T]:
 		return [conv.structure( e, cls ) for e in self.as_dict_list()]
 
@@ -73,8 +76,14 @@ class SynoResponse:
 			return []
 
 	def as_obj( self, cls: Type[T] ) -> T:
-		first_key, first_value = next( iter( self.data.items() ) )
-		return conv.structure( first_value, cls )
+		return conv.structure( next( iter( self.data.values() ) ), cls )
+
+		# todo: put check of data type in here?
+		# key, value = next( iter( self.data.items() ) )
+		# if list( self.data.keys() ) == [ 'list' ]:
+		# 	return [ conv.structure( i, cls ) for i in value ]
+		# else:
+		#	  return conv.structure( value, cls )
 
 	def request( self ) -> PreparedRequest:
 		return self.response.request
@@ -133,13 +142,16 @@ class SynoWebService:
 
 		params = template | kwargs  # create variable making debugging easier
 
-		log.debug( f'[dark_orange]{fn.__name__}[/dark_orange] {url}, parameters:' )
-		log.debug( pretty_repr( params ) )
+		log.debug( f'[dark_orange]{fn.__name__.upper()}[/dark_orange] {url}' )
+		log.debug( f'[dark_orange]Parameters:[/dark_orange] {pretty_repr( params )}' )
 
 		response: Response = fn( url=url, params=params, verify=True )
 
-		log.debug( f'Received response with status = {response.status_code}, and payload:' )
-		log.debug( pretty_repr( response.json(), max_depth=4 ) )
+		log.debug( f'[dark_orange]Response:[/dark_orange] {response.status_code}' )
+		try:
+			log.debug( f'[dark_orange]Payload:[/dark_orange] {pretty_repr( response.json(), max_depth=6 )}' )
+		except JSONDecodeError:
+			log.debug( f'[dark_orange]Payload:[/dark_orange] <binary> length={len( response.content )}' )
 
 		return SynoResponse( response=response )
 
