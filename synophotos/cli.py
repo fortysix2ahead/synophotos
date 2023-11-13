@@ -9,7 +9,7 @@ from yaml import safe_dump
 from synophotos import __version__
 from synophotos import ApplicationContext
 from synophotos.photos import Item, SynoPhotos, ThumbnailSize
-from synophotos.ui import pprint as pp, print_error, print_obj, table_for
+from synophotos.ui import obj_table, pprint as pp, print_error, print_obj, print_obj_table, table_for
 
 log = getLogger( __name__ )
 
@@ -234,6 +234,23 @@ def download( ctx: ApplicationContext, destination: str, id: int, size: Thumbnai
 	fs.makedirs( folder.name, recreate=True )
 	fs.writebytes( path=f'{folder.name}/{item.filename}', contents=contents )
 	log.info( f'downloaded item {item.id} to: {folder.name}/{item.filename}, wrote {len( contents )} bytes' )
+
+@cli.command( help='displays information on items, folder and albums (this is mainly for development)' )
+@option( '-a', '--album-id', required=False, is_flag=True, default=False, help='treat provided id as album id' )
+@option( '-f', '--folder-id', required=False, is_flag=True, default=False, help='treat provided id as folder id' )
+@option( '-i', '--item-id', required=False, is_flag=True, default=False, help='treat provided id as item id (this is the default)' )
+@argument( 'id', nargs=1, required=False, type=int )
+@pass_obj
+def show( ctx: ApplicationContext, album_id: bool, folder_id, item_id: bool, id: int ):
+	if not album_id and not folder_id and not item_id:
+		item_id = True
+
+	if item_id:
+		print_obj_table( synophotos.item( id ) )
+	elif album_id:
+		print_obj_table( synophotos.album( id ) )
+	elif folder_id:
+		print_obj_table( synophotos.folder( id ) )
 
 @cli.command( hidden=True, help='displays a selected payload (this is for development only)' )
 @argument( 'name', nargs=1, required=False )

@@ -23,13 +23,17 @@ jconv = make_converter()
 
 @define
 class Additional:
+	access_permission: Dict = field( default=None ) # folder only?
 	description: str = field( default=None )
 	exif: Dict = field( factory=dict )
+	flex_section: List[int] = field( factory=list ) # album only?
 	orientation: int = field( default=None )
 	orientation_original: int = field( default=None )
-	person: List = field( default=list )
+	person: List = field( default=list ) # that's of type class???
+	provider_count: int = field( default=None )
 	rating: int = field( default=None )
 	resolution: Dict[str, int] = field( factory=dict )
+	sharing_info: Dict = field( factory=dict ) # album only?
 	tag: List[str] = field( factory=list )
 	thumbnail: Dict = field( factory=dict )
 
@@ -114,6 +118,9 @@ class Album:
 	start_time: int = field( default=0 )
 	type: str = field( default=None )
 	version: int = field( default=0 )
+
+	# for album this can be ["sharing_info","flex_section","provider_count","thumbnail"]
+	additional: Additional = field( factory=Additional )
 
 	# additional fields
 	# items: [] = field( init=False, default_factory=list )
@@ -280,7 +287,12 @@ class SynoPhotos( SynoWebService ):
 	# helpers
 
 	def album( self, id: int ) -> Album:
-		pass
+		album = first( self.entry( GET_ALBUM, id=f'[{id}]' ).as_obj( List[Album] ), None )
+		if not album: # no album, try again with shared albums
+			albums = self.list_albums( name=None, include_shared=True )
+			if album := first( [a for a in albums if id == a.id], None ):
+				album = first( self.entry( GET_SHARED_ALBUM, passphrase=album.passphrase ).as_obj( List[Album] ) )
+		return album
 
 	def albums( self, name: str ) -> List[Album]:
 		return self.list_albums( name, include_shared=False )
