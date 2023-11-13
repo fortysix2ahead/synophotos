@@ -19,6 +19,7 @@ class api( Enum ):
 	download_shared='SYNO.FotoTeam.Download'
 	sharing_passphrase='SYNO.Foto.Sharing.Passphrase'
 	thumbnail='SYNO.Foto.Thumbnail'
+	thumbnail_shared='SYNO.FotoTeam.Thumbnail'
 
 class category( Enum ):
 	normal='normal'
@@ -41,6 +42,7 @@ API_DOWNLOAD = { api.__name__: api.download.value }
 API_DOWNLOAD_SHARED = { api.__name__: api.download_shared.value }
 API_SHARING_PASSPHRASE = { api.__name__: api.sharing_passphrase.value }
 API_THUMBNAIL = { api.__name__: api.thumbnail.value }
+API_THUMBNAIL_SHARED = { api.__name__: api.thumbnail_shared.value }
 
 SORT_CREATE_TIME = { sort_by.__name__: sort_by.create_time.value }
 SORT_TAKENTIME = { sort_by.__name__: sort_by.takentime.value }
@@ -82,6 +84,11 @@ GET_ITEM = API_BROWSE_ITEM | GET5 | {
 	'id': '[0]',
 	'additional': '["description","tag","exif","resolution","orientation","gps","video_meta","video_convert","thumbnail","address","geocoding_id","rating","motion_photo","person"]'
 }
+GET_SHARED_ITEM = API_BROWSE_ITEM | GET5 | {
+	'id': '[...]',
+	'passphrase': ...,
+	'additional': '["description","tag","exif","resolution","orientation","gps","video_meta","video_convert","thumbnail","address","geocoding_id","rating","motion_photo","provider_user_id","person"]'
+}
 
 # download item
 
@@ -89,6 +96,7 @@ GET_ITEM = API_BROWSE_ITEM | GET5 | {
 DOWNLOAD_ITEM = API_DOWNLOAD | GET1 | { 'mode': 'download', 'id': ..., 'type': 'source' }
 DOWNLOAD_SHARED_ITEM = API_DOWNLOAD_SHARED | DOWNLOAD1 | { 'unit_id': '"[...]"', 'cache_key': ... } # + cache_key="40808_1633659236" ???
 DOWNLOAD_THUMBNAIL = API_THUMBNAIL | GET1 | { 'mode': 'download', 'id': ..., 'type': 'unit', 'size': 'xl', 'cache_key': ... }
+DOWNLOAD_SHARED_THUMBNAIL = API_THUMBNAIL | GET2 | { 'id': ..., 'type': 'unit', 'size': 'xl', 'cache_key': ..., 'passphrase': ... }
 
 # browse/list elements
 

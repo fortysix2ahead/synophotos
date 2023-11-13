@@ -1,14 +1,16 @@
 from logging import getLogger
+from os.path import dirname
 from sys import exit as sysexit
-from typing import cast, Optional
+from typing import List, cast, Optional
 
 from click import argument, Context, group, option, pass_context, pass_obj
 from fs.osfs import OSFS
+from more_itertools import flatten
 from yaml import safe_dump
 
 from synophotos import __version__
 from synophotos import ApplicationContext
-from synophotos.photos import Item, SynoPhotos, ThumbnailSize
+from synophotos.photos import Album, Item, SynoPhotos, ThumbnailSize
 from synophotos.ui import obj_table, pprint as pp, print_error, print_obj, print_obj_table, table_for
 
 log = getLogger( __name__ )
@@ -251,6 +253,26 @@ def show( ctx: ApplicationContext, album_id: bool, folder_id, item_id: bool, id:
 		print_obj_table( synophotos.album( id ) )
 	elif folder_id:
 		print_obj_table( synophotos.folder( id ) )
+
+
+# noinspection PyShadowingNames
+@cli.command( help='sync' )
+# @option( '-a', '--album', required=False, is_flag=True, help='treat arguments as albums (the default)' ) # for now only sync albums
+@option( '-d', '--destination', required=True, is_flag=False, help='destination folder to sync to' )
+@argument( 'albums', nargs=-1, required=True )
+@pass_obj
+def sync( ctx: ApplicationContext, albums: List[str], destination: str ):
+	fs = OSFS( root_path=destination, expand_vars=True, create=True )
+	albums = flatten( [ synophotos.albums( a, include_shared=True ) for a in albums ] )
+	albums = list( { a.id: a for a in albums }.values() ) # make unique
+	for a in albums:
+		items = synophotos.list_album_items( a.id )
+		for i in items:
+			if not fs.exists( path := f'/{a.id} - {a.name}/{i.filename}' ):
+				item, contents = synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='xl' )
+				fs.makedirs( dirname( path ), recreate=True )
+				fs.writebytes( path, contents )
+				log.info( f'saved image to {fs.getsyspath( path )}' )
 
 @cli.command( hidden=True, help='displays a selected payload (this is for development only)' )
 @argument( 'name', nargs=1, required=False )
