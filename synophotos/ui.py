@@ -7,12 +7,16 @@ from attrs.exceptions import NotAnAttrsClassError
 from rich import box
 from rich.console import Console
 from rich.pretty import Pretty, pretty_repr
+from rich.prompt import Confirm
 from rich.style import Style
 from rich.table import Table
 
 cs = Console()
 
 blue = Style( color='blue' )
+
+def confirm( msg: str, force: bool = False ) -> bool:
+	return force or Confirm().ask( msg )
 
 def pprint( item: Any ):
 	cs.print( item )
