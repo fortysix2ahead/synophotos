@@ -32,6 +32,7 @@ class Additional:
 	orientation_original: int = field( default=None )
 	person: List = field( default=list ) # that's of type class???
 	provider_count: int = field( default=None )
+	provider_user_id: int = field( default=None )
 	rating: int = field( default=None )
 	resolution: Dict[str, int] = field( factory=dict )
 	sharing_info: Dict = field( factory=dict ) # album only?
