@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from logging import getLogger
 from typing import List, Literal, Optional, Tuple
 
@@ -57,10 +58,17 @@ class Item:
 	def __hash__( self ):
 		return self.id
 
+	@property
+	def modified( self ) -> datetime:
+		return datetime.utcfromtimestamp( self.time )
+
+	@property
+	def indexed( self ) -> datetime:
+		return datetime.utcfromtimestamp( self.indexed_time / 1000 )
+
 	@classmethod
 	def table_fields( cls ) -> List[str]:
 		return ['id', 'filename', 'filesize', 'folder_id', 'owner_user_id']
-
 
 @define
 class Folder:
