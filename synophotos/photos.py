@@ -54,6 +54,9 @@ class Item:
 	# folder: Folder = field( init=False, default=None )
 	# albums: List[Album] = field( init=False, default_factory=list )
 
+	def __hash__( self ):
+		return self.id
+
 	@classmethod
 	def table_fields( cls ) -> List[str]:
 		return ['id', 'filename', 'filesize', 'folder_id', 'owner_user_id']
@@ -79,6 +82,9 @@ class Folder:
 
 	# metadata for table printing -> we're doing this via classmethod
 	# table_fields: ClassVar[List[str]] = field( default=[ 'id', 'name' ] )
+
+	def __hash__( self ):
+		return self.id
 
 	@classmethod
 	def table_fields( cls ) -> List[str]:
@@ -121,6 +127,9 @@ class Album:
 
 	# for album this can be ["sharing_info","flex_section","provider_count","thumbnail"]
 	additional: Additional = field( factory=Additional )
+
+	def __hash__( self ):
+		return self.id
 
 	# additional fields
 	# items: [] = field( init=False, default_factory=list )
