@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from logging import getLogger
 from typing import List, Literal, Optional, Tuple
 
@@ -31,6 +32,7 @@ class Additional:
 	orientation_original: int = field( default=None )
 	person: List = field( default=list ) # that's of type class???
 	provider_count: int = field( default=None )
+	provider_user_id: int = field( default=None )
 	rating: int = field( default=None )
 	resolution: Dict[str, int] = field( factory=dict )
 	sharing_info: Dict = field( factory=dict ) # album only?
@@ -54,10 +56,20 @@ class Item:
 	# folder: Folder = field( init=False, default=None )
 	# albums: List[Album] = field( init=False, default_factory=list )
 
+	def __hash__( self ):
+		return self.id
+
+	@property
+	def modified( self ) -> datetime:
+		return datetime.utcfromtimestamp( self.time )
+
+	@property
+	def indexed( self ) -> datetime:
+		return datetime.utcfromtimestamp( self.indexed_time / 1000 )
+
 	@classmethod
 	def table_fields( cls ) -> List[str]:
 		return ['id', 'filename', 'filesize', 'folder_id', 'owner_user_id']
-
 
 @define
 class Folder:
@@ -79,6 +91,9 @@ class Folder:
 
 	# metadata for table printing -> we're doing this via classmethod
 	# table_fields: ClassVar[List[str]] = field( default=[ 'id', 'name' ] )
+
+	def __hash__( self ):
+		return self.id
 
 	@classmethod
 	def table_fields( cls ) -> List[str]:
@@ -121,6 +136,9 @@ class Album:
 
 	# for album this can be ["sharing_info","flex_section","provider_count","thumbnail"]
 	additional: Additional = field( factory=Additional )
+
+	def __hash__( self ):
+		return self.id
 
 	# additional fields
 	# items: [] = field( init=False, default_factory=list )
@@ -274,10 +292,13 @@ class SynoPhotos( SynoWebService ):
 	def create_folder( self, name: str, parent_id: int = 0 ) -> int:
 		return self.get( ENTRY_URL, {**CREATE_FOLDER, 'name': f'\"{name}\"', 'target_id': parent_id} )
 
-	def download( self, item_id: int, thumbnail: Optional[ThumbnailSize] = None ) -> Tuple[Item, bytes]:
-		_item, binary = self.item( item_id ), b''
+	def download( self, item_id: int, passphrase: str = None, thumbnail: Optional[ThumbnailSize] = None ) -> Tuple[Item, bytes]:
+		_item, binary = self.item( item_id, passphrase ), b''
 		if thumbnail:
-			response = self.entry( DOWNLOAD_THUMBNAIL, id=item_id, cache_key=_item.additional.thumbnail.get( 'cache_key' ) )
+			if passphrase:
+				response = self.entry( DOWNLOAD_SHARED_THUMBNAIL, id=item_id, cache_key=_item.additional.thumbnail.get( 'cache_key' ), passphrase=passphrase )
+			else:
+				response = self.entry( DOWNLOAD_THUMBNAIL, id=item_id, cache_key=_item.additional.thumbnail.get( 'cache_key' ) )
 			binary = response.response.content
 		else:
 			raise NotImplementedError
@@ -294,8 +315,8 @@ class SynoPhotos( SynoWebService ):
 				album = first( self.entry( GET_SHARED_ALBUM, passphrase=album.passphrase ).as_obj( List[Album] ) )
 		return album
 
-	def albums( self, name: str ) -> List[Album]:
-		return self.list_albums( name, include_shared=False )
+	def albums( self, name: str, include_shared=False ) -> List[Album]:
+		return self.list_albums( name, include_shared=include_shared )
 
 	def folder( self, id: int ) -> Folder:
 		return self.entry( GET_FOLDER, id=id ).as_obj( Folder )
@@ -303,8 +324,11 @@ class SynoPhotos( SynoWebService ):
 	def folders( self, name: str ) -> List[Folder]:
 		return self.list_folders( 0, name, True )
 
-	def item( self, id: int ) -> Optional[Item]:
-		return first( self.entry( GET_ITEM, id=f'[{id}]' ).as_obj( List[Item] ), None )
+	def item( self, id: int, passphrase: str = None ) -> Optional[Item]:
+		if passphrase:
+			return first( self.entry( GET_SHARED_ITEM, id=f'[{id}]', passphrase=passphrase ).as_obj( List[Item] ), None )
+		else:
+			return first( self.entry( GET_ITEM, id=f'[{id}]' ).as_obj( List[Item] ), None )
 
 	def root_folder( self ) -> Folder:
 		return self.folder( 0 )

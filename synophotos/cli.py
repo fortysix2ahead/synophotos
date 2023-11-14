@@ -1,15 +1,18 @@
 from logging import getLogger
 from sys import exit as sysexit
-from typing import cast, Optional
+from typing import List, cast, Optional
 
 from click import argument, Context, group, option, pass_context, pass_obj
 from fs.osfs import OSFS
+from more_itertools import flatten
+from rich.prompt import Confirm
 from yaml import safe_dump
 
+from fsio import prepare_sync_albums, remove_item, write_item
 from synophotos import __version__
 from synophotos import ApplicationContext
-from synophotos.photos import Item, SynoPhotos, ThumbnailSize
-from synophotos.ui import obj_table, pprint as pp, print_error, print_obj, print_obj_table, table_for
+from synophotos.photos import Album, Item, SynoPhotos, ThumbnailSize
+from synophotos.ui import obj_table, pprint as pp, pprint, print_error, print_obj, print_obj_table, table_for
 
 log = getLogger( __name__ )
 
@@ -224,7 +227,7 @@ def search( ctx: ApplicationContext, name: str ):
 def download( ctx: ApplicationContext, destination: str, id: int, size: ThumbnailSize ):
 	if size == 'original':
 		size = 'xl'
-		log.warning( 'download original size of images is currently broken, falling back to XL thumbnails' )
+		log.warning( 'download original images is currently not supported, falling back to XL thumbnails' )
 
 	fs = OSFS( root_path=destination, expand_vars=True, create=True )
 
@@ -251,6 +254,35 @@ def show( ctx: ApplicationContext, album_id: bool, folder_id, item_id: bool, id:
 		print_obj_table( synophotos.album( id ) )
 	elif folder_id:
 		print_obj_table( synophotos.folder( id ) )
+
+
+# noinspection PyShadowingNames
+@cli.command( help='sync' )
+# @option( '-a', '--album', required=False, is_flag=True, help='treat arguments as albums (the default)' ) # for now only sync albums
+@option( '-d', '--destination', required=True, is_flag=False, help='destination folder to sync to' )
+@argument( 'albums', nargs=-1, required=True )
+@pass_obj
+def sync( ctx: ApplicationContext, albums: List[str], destination: str ):
+	# get all existing items in all albums to be synced
+	albums = flatten( [ synophotos.albums( a, include_shared=True ) for a in albums ] )
+	albums = { a: [] for a in albums }
+	for a in albums.keys():
+		albums[a] = synophotos.list_album_items( a.id )
+
+	result = prepare_sync_albums( albums, destination )
+
+	if len( result.additions ) == 0 and len( result.removals ) == 0:
+		pprint( f'Skipping {len( result.skips )} files, nothing to do ...' )
+		return
+
+	msg = f'Sync will [green]add {len( result.additions )} files[/green], [red]remove {len( result.removals )} files[/red] and [yellow]skip {len( result.skips )} files[/yellow], continue?'
+	if not Confirm.ask( msg ):
+		return
+
+	for i, a, p in result.additions:
+		write_item( *synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='xl' ), result.fs, p )
+	for p in result.removals:
+		remove_item( result.fs, p )
 
 @cli.command( hidden=True, help='displays a selected payload (this is for development only)' )
 @argument( 'name', nargs=1, required=False )
