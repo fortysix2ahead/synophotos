@@ -1,18 +1,16 @@
 from logging import getLogger
 from sys import exit as sysexit
-from typing import List, cast, Optional
+from typing import List, Optional, cast
 
-from click import argument, Context, group, option, pass_context, pass_obj
+from click import Context, argument, group, option, pass_context, pass_obj
 from fs.osfs import OSFS
 from more_itertools import flatten
-from rich.prompt import Confirm
 from yaml import safe_dump
 
 from fsio import prepare_sync_albums, remove_item, write_item
-from synophotos import __version__
-from synophotos import ApplicationContext
-from synophotos.photos import Album, Item, SynoPhotos, ThumbnailSize
-from synophotos.ui import obj_table, pprint as pp, pprint, print_error, print_obj, print_obj_table, table_for
+from synophotos import ApplicationContext, __version__
+from synophotos.photos import SynoPhotos, ThumbnailSize
+from synophotos.ui import confirm, pprint, pprint as pp, print_error, print_obj, print_obj_table, table_for
 
 log = getLogger( __name__ )
 
@@ -20,10 +18,11 @@ synophotos: Optional[SynoPhotos] = None  # global variable for functions below
 
 @group
 @option( '-d', '--debug', is_flag=True, required=False, default=False, help='outputs debug information (implies --verbose)' )
+@option( '-f', '--force', is_flag=True, required=False, default=False, help='forces the execution of commands and skips confirmation dialogs' )
 @option( '-v', '--verbose', is_flag=True, required=False, default=False, help='outputs verbose log information' )
 @pass_context
-def cli( ctx: Context, debug: bool, verbose: bool ):
-	ctx.obj = ApplicationContext( verbose=verbose, debug=debug )
+def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
+	ctx.obj = ApplicationContext( verbose=verbose, debug=debug, force=force )
 
 	if ctx.obj.config.active_profile:
 		# create (global) service (to ease login) and add to context
@@ -276,7 +275,7 @@ def sync( ctx: ApplicationContext, albums: List[str], destination: str ):
 		return
 
 	msg = f'Sync will [green]add {len( result.additions )} files[/green], [red]remove {len( result.removals )} files[/red] and [yellow]skip {len( result.skips )} files[/yellow], continue?'
-	if not Confirm.ask( msg ):
+	if not confirm( msg, ctx.force ):
 		return
 
 	for i, a, p in result.additions:

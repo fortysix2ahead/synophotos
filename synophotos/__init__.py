@@ -63,6 +63,7 @@ class Profile:
 class Config:
 
 	debug: bool = field( default=False )
+	force: bool = field( default=False )
 	verbose: bool = field( default=False )
 
 	profile: str = field( default=None )
@@ -78,8 +79,9 @@ class ApplicationContext:
 	config: Config = field( factory=Config )
 	sessions: Dict[str, SynoSession] = field( factory=dict )
 
-	verbose: bool = field( default=False )
 	debug: bool = field( default=False )
+	force: bool = field( default=False )
+	verbose: bool = field( default=False )
 
 	service: WebService = field( default=None )
 
