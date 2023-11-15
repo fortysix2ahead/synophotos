@@ -1,0 +1,12 @@
+
+# id of the synology user, which is used during test
+user_id: 0
+
+# id of the synology group, the user belongs to
+group_id: 0
+
+# id of a private folder, owned by the user
+personal_folder: 0
+
+# id of a folder, that the user has shared
+shared_folder: 0
