@@ -1,5 +1,9 @@
 # Changelog
 
+## rel-0.2.1 - 2023-11-15
+
+**Full Changelog**: https://github.com/fortysix2ahead/synophotos/compare/rel-0.2.0...rel-0.2.1
+
 ## [0.2.1] - 2023-11-11
 
 ### Fixed
