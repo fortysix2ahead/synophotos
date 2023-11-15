@@ -312,57 +312,57 @@ A sample output looks like this (getting details about an album):
 ```
 ❯ synophotos show -a 64
                            ╷
-  attribute                │ value
-╶──────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────
-  'cant_migrate_condition' │ None
-  'condition'              │ {'general_tag': [261], 'general_tag_policy': ... }
-  'create_time'            │ 1699809584
-  'end_time'               │ 1053393427
-  'freeze_album'           │ False
-  'id'                     │ 64
-  'item_count'             │ 5
-  'name'                   │ 'Holidays 2023'
-  'owner_user_id'          │ 5
-  'passphrase'             │ 'Abcdefghi'
-  'shared'                 │ True
-  'sort_by'                │ 'default'
-  'sort_direction'         │ 'default'
-  'start_time'             │ 1053280888
-  'temporary_shared'       │ False
-  'type'                   │ 'condition'
-  'version'                │ 385506
-  'additional'             │ Additional(
-                           │     access_permission=None,
-                           │     description=None,
-                           │     exif={},
-                           │     flex_section=[5],
-                           │     orientation=None,
-                           │     orientation_original=None,
-                           │     person=<class 'list'>,
-                           │     provider_count=1,
-                           │     provider_user_id=None,
-                           │     rating=None,
-                           │     resolution={},
-                           │     sharing_info={
-                           │         'enable_password': False,
-                           │         'expiration': 0,
-                           │         'is_expired': False,
-                           │         'mtime': 1699959538,
-                           │         'owner': {'id': 5, 'name': 'user0'},
-                           │         'passphrase': 'Abcdefghi',
-                           │         'permission': [
-                           │             {'db_id': 2, 'id': 1000, 'name': 'user0', 'role': 'view', 'type': 'user'},
-                           │             {'db_id': 12, 'id': 1001, 'name': 'user1', 'role': 'download', 'type': 'user'}
-                           │         ],
-                           │         'privacy_type': 'private',
-                           │         'sharing_link': 'https://example.com/mo/sharing/Abcdefghi',
-                           │         'type': 'album'
-                           │     },
-                           │     tag=[],
-                           │     thumbnail={'cache_key': '26435_1695192057', ... }
-                           │ )
-                           ╵
-  ```
+attribute                │ value
+─────────────────────────┼──────────────────────────────────
+'cant_migrate_condition' │ None
+'condition'              │ {'general_tag': [261], ... }
+'create_time'            │ 1699809584
+'end_time'               │ 1053393427
+'freeze_album'           │ False
+'id'                     │ 64
+'item_count'             │ 5
+'name'                   │ 'Holidays 2023'
+'owner_user_id'          │ 5
+'passphrase'             │ 'Abcdefghi'
+'shared'                 │ True
+'sort_by'                │ 'default'
+'sort_direction'         │ 'default'
+'start_time'             │ 1053280888
+'temporary_shared'       │ False
+'type'                   │ 'condition'
+'version'                │ 385506
+'additional'             │ Additional(
+                         │     access_permission=None,
+                         │     description=None,
+                         │     exif={},
+                         │     flex_section=[5],
+                         │     orientation=None,
+                         │     orientation_original=None,
+                         │     person=<class 'list'>,
+                         │     provider_count=1,
+                         │     provider_user_id=None,
+                         │     rating=None,
+                         │     resolution={},
+                         │     sharing_info={
+                         │         'enable_password': False,
+                         │         'expiration': 0,
+                         │         'is_expired': False,
+                         │         'mtime': 1699959538,
+                         │         'owner': { ... },
+                         │         'passphrase': 'Abcdefghi',
+                         │         'permission': [
+                         │             {'db_id': ...},
+                         │             {'db_id': ...}
+                         │         ],
+                         │         'privacy_type': 'private',
+                         │         'sharing_link': ...,
+                         │         'type': 'album'
+                         │     },
+                         │     tag=[],
+                         │     thumbnail={ ... }
+                         │ )
+                         ╵
+```
 
 ## Hidden Commands
 
