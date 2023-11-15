@@ -6,7 +6,7 @@ version = "0.1.2"
 description = "Command Line Interface Client for Synology Photos"
 readme = "README.md"
 keywords = ["synology", "photos", "terminal", "cli", "command line"]
-license = {text = "BSD-3-Clause"}
+license = {text = "MIT"}
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -40,6 +40,8 @@ dev = [
 "Homepage" = "https://github.com/fortysix2ahead/synophotos/"
 "Source Code" = "https://github.com/fortysix2ahead/synophotos/"
 "Issue Tracker" = "https://github.com/fortysix2ahead/synophotos/issues/"
+Documentation = "https://synophotos.readthedocs.io/"
+Source = "https://github.com/fortysix2ahead/synophotos/"
 
 [project.scripts]
 synophotos = "synophotos.cli:main"

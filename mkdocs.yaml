@@ -7,6 +7,7 @@ docs_dir: docs
 
 nav:
     - Getting Started: 'index.md'
+    - Usage: 'usage.md'
     - Command Reference: 'cli.md'
     - Issues: https://github.com/fortysix2ahead/synophotos/issues
 
