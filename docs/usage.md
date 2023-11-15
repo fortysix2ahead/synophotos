@@ -313,9 +313,9 @@ A sample output looks like this (getting details about an album):
 ❯ synophotos show -a 64
                            ╷
   attribute                │ value
-╶──────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╴
+╶──────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────
   'cant_migrate_condition' │ None
-  'condition'              │ {'general_tag': [261], 'general_tag_policy': 'and', 'item_type': [6, 4, 3, 2, 0], 'user_id': 5}
+  'condition'              │ {'general_tag': [261], 'general_tag_policy': ... }
   'create_time'            │ 1699809584
   'end_time'               │ 1053393427
   'freeze_album'           │ False
@@ -348,7 +348,7 @@ A sample output looks like this (getting details about an album):
                            │         'expiration': 0,
                            │         'is_expired': False,
                            │         'mtime': 1699959538,
-                           │         'owner': {'id': 5, 'name': 'klaus'},
+                           │         'owner': {'id': 5, 'name': 'user0'},
                            │         'passphrase': 'Abcdefghi',
                            │         'permission': [
                            │             {'db_id': 2, 'id': 1000, 'name': 'user0', 'role': 'view', 'type': 'user'},
@@ -359,7 +359,7 @@ A sample output looks like this (getting details about an album):
                            │         'type': 'album'
                            │     },
                            │     tag=[],
-                           │     thumbnail={'cache_key': '26435_1695192057', 'm': 'ready', 'preview': 'broken', 'sm': 'ready', 'unit_id': 26435, 'xl': 'ready'}
+                           │     thumbnail={'cache_key': '26435_1695192057', ... }
                            │ )
                            ╵
   ```
