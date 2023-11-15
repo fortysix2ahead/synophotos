@@ -14,7 +14,7 @@ from rich.logging import RichHandler
 from synophotos.ui import dataclass_table
 from synophotos.webservice import SynoSession, WebService
 
-__version__ = '0.1.2'
+__version__ = '0.2.0'
 
 log = getLogger( __name__ )
 
