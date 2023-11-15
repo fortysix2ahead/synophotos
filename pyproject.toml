@@ -2,7 +2,7 @@
 name = "synophotos"
 authors = [{ name = "fortysix2ahead", email = "fortysix2ahead@gmail.com" }]
 maintainers = [{ name = "fortysix2ahead", email = "fortysix2ahead@gmail.com" }]
-version = "0.2.0"
+version = "0.2.1"
 description = "Command Line Interface Client for Synology Photos"
 readme = "README.md"
 keywords = ["synology", "photos", "terminal", "cli", "command line"]
@@ -54,15 +54,15 @@ requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.bumpver]
-current_version = "0.2.0"
+current_version = "0.2.1"
 version_pattern = "MAJOR.MINOR.PATCH[-INC0]"
 commit_message = "Increased version from {old_version} to {new_version}"
 tag_message = "rel-{new_version}"
 tag_scope = "default"
 pre_commit_hook = ""
 post_commit_hook = ""
-commit = true
-tag = true
+commit = false
+tag = false
 push = false
 
 [tool.bumpver.file_patterns]

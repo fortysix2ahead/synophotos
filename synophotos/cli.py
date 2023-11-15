@@ -7,8 +7,8 @@ from fs.osfs import OSFS
 from more_itertools import flatten
 from yaml import safe_dump
 
-from fsio import prepare_sync_albums, remove_item, write_item
 from synophotos import ApplicationContext, __version__
+from synophotos.fsio import prepare_sync_albums, remove_item, write_item
 from synophotos.photos import SynoPhotos, ThumbnailSize
 from synophotos.ui import confirm, pprint, pprint as pp, print_error, print_obj, print_obj_table, table_for
 
