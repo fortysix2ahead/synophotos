@@ -16,6 +16,8 @@ log = getLogger( __name__ )
 
 synophotos: Optional[SynoPhotos] = None  # global variable for functions below
 
+no_login_commands = [ 'init', 'version' ]
+
 @group
 @option( '-d', '--debug', is_flag=True, required=False, default=False, help='outputs debug information (implies --verbose)' )
 @option( '-f', '--force', is_flag=True, required=False, default=False, help='forces the execution of commands and skips confirmation dialogs' )
@@ -31,10 +33,11 @@ def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
 		ctx.obj.service = synophotos
 
 		# attempt to log in
-		if not synophotos.login( ctx.obj ):
-			#ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
-			print_error( 'failed to log in' )
-			sysexit( -1 )
+		if not ctx.invoked_subcommand in no_login_commands:
+			if not synophotos.login( ctx.obj ):
+				#ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
+				print_error( 'failed to log in' )
+				sysexit( -1 )
 
 @cli.command( help='initializes the application' )
 @pass_obj
