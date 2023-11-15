@@ -9,6 +9,7 @@ mkdocs-material~=9.5.4
 more-itertools~=10.2.0
 platformdirs~=4.1.0
 pyyaml~=6.0.1
+pytest ~= 7.4.3
 requests~=2.31.0
 rich~=13.7.0
 setuptools~=69.0.3
