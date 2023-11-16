@@ -188,10 +188,11 @@ class SynoPhotos( SynoWebService ):
 
 	# listing elements
 
-	def list_albums( self, name: str = None, include_shared: bool = False ) -> List[Album]:
+	def list_albums( self, *names: str, include_shared: bool = False ) -> List[Album]:
 		payload = BROWSE_ALBUM if not include_shared else BROWSE_ALBUM_ALL
 		albums = self.entry( payload ).as_list( Album )
-		albums = [a for a in albums if name.lower() in a.name.lower()] if name else albums
+		if names:
+			albums = list( filter( lambda a: any( n for n in names if n.lower() in a.name.lower() ), albums ) )
 		return sorted( albums, key=lambda a: a.name )
 
 	def list_folders( self, parent_id: int = None, name: str = None, recursive: bool = False ) -> List[Folder]:
@@ -310,13 +311,13 @@ class SynoPhotos( SynoWebService ):
 	def album( self, id: int ) -> Album:
 		album = first( self.entry( GET_ALBUM, id=f'[{id}]' ).as_obj( List[Album] ), None )
 		if not album: # no album, try again with shared albums
-			albums = self.list_albums( name=None, include_shared=True )
+			albums = self.list_albums( include_shared=True )
 			if album := first( [a for a in albums if id == a.id], None ):
 				album = first( self.entry( GET_SHARED_ALBUM, passphrase=album.passphrase ).as_obj( List[Album] ) )
 		return album
 
-	def albums( self, name: str, include_shared=False ) -> List[Album]:
-		return self.list_albums( name, include_shared=include_shared )
+	def albums( self, *names: str, include_shared=False ) -> List[Album]:
+		return self.list_albums( *names, include_shared=include_shared )
 
 	def folder( self, id: int ) -> Folder:
 		return self.entry( GET_FOLDER, id=id ).as_obj( Folder )
@@ -345,7 +346,8 @@ class SynoPhotos( SynoWebService ):
 		return next( (d.get( 'id' ) for d in self.list_groups() if (d.get( 'name' ) == group and d.get( 'type' ) == 'group')), None )
 
 	def id_for_album( self, album: str ) -> int:
-		return next( (a.id for a in self.list_albums( album, True ) if album.lower() in a.name.lower()), None )
+		# return next( (a.id for a in self.list_albums( album, include_shared=True ) if album.lower() in a.name.lower()), None )
+		return next( (a.id for a in self.list_albums( album, include_shared=True ) ), None )
 
 	def id_for_folder( self, folder: str ) -> int:
 		return next( (f.id for f in self.list_folders( 0, folder, True )), None )
