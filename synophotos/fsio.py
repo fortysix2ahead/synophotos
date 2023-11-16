@@ -24,7 +24,8 @@ def prepare_sync_albums( albums: Dict[Album, List[Item]], destination: str ) -> 
 
 	for album, item_list in albums.items():
 		for item in item_list:
-			path = f'/{album.id} - {album.name}/{item.filename}'
+			# path = f'/{album.id} - {album.name}/{item.filename}' # don't use album name as it might contain characters which cannot be used in filenames
+			path = f'/{item.folder_id}/{item.filename}'
 			if not fs.exists( path ):
 				result.additions.append( ( item, album, path ) )
 			elif False:
