@@ -1,6 +1,6 @@
 from logging import getLogger
 from sys import exit as sysexit
-from typing import List, Optional, cast
+from typing import List, Optional, Tuple, cast
 
 from click import Context, argument, group, option, pass_context, pass_obj
 from fs.osfs import OSFS
@@ -110,10 +110,10 @@ def count( ctx: ApplicationContext, albums: bool, folders: bool, items: bool, pa
 
 @cli.command( help='lists existing albums and their ids' )
 @option( '-s', '--shared', required=False, is_flag=True, default=False, help='include shared elements' )
-@argument( 'name', nargs=1, required=False, type=str )
+@argument( 'names', nargs=-1, required=False, type=str )
 @pass_obj
-def albums( ctx: ApplicationContext, name: str, shared: bool ):
-		print_obj( synophotos.list_albums( name, shared ) )
+def albums( ctx: ApplicationContext, names: Tuple[str], shared: bool ):
+		print_obj( synophotos.list_albums( *names, include_shared=shared ) )
 
 @cli.command( help='lists existing folders and their ids' )
 @option( '-p', '--parent_id', required=False, default=None, help='id of the parent', type=int )
