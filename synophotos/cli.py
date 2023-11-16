@@ -262,12 +262,12 @@ def show( ctx: ApplicationContext, album_id: bool, folder_id, item_id: bool, id:
 @cli.command( help='sync' )
 # @option( '-a', '--album', required=False, is_flag=True, help='treat arguments as albums (the default)' ) # for now only sync albums
 @option( '-d', '--destination', required=True, is_flag=False, help='destination folder to sync to' )
-@argument( 'albums', nargs=-1, required=True )
+@argument( 'albums', nargs=-1, required=False )
 @pass_obj
-def sync( ctx: ApplicationContext, albums: List[str], destination: str ):
+def sync( ctx: ApplicationContext, albums: Tuple[str], destination: str ):
 	# get all existing items in all albums to be synced
-	albums = flatten( [ synophotos.albums( a, include_shared=True ) for a in albums ] )
-	albums = { a: [] for a in albums }
+	all_albums = synophotos.albums( *albums, include_shared=True )
+	albums = { a: [] for a in all_albums }
 	for a in albums.keys():
 		albums[a] = synophotos.list_album_items( a.id )
 

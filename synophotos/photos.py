@@ -316,8 +316,8 @@ class SynoPhotos( SynoWebService ):
 				album = first( self.entry( GET_SHARED_ALBUM, passphrase=album.passphrase ).as_obj( List[Album] ) )
 		return album
 
-	def albums( self, name: str, include_shared=False ) -> List[Album]:
-		return self.list_albums( name, include_shared=include_shared )
+	def albums( self, *names: str, include_shared=False ) -> List[Album]:
+		return self.list_albums( *names, include_shared=include_shared )
 
 	def folder( self, id: int ) -> Folder:
 		return self.entry( GET_FOLDER, id=id ).as_obj( Folder )
