@@ -119,14 +119,24 @@ Finally, you can also list all available folders recursively by using `-r` switc
 ### Albums
 
 Finding albums works very similar to finding folders, with the exception that there are no parent albums, and therefore you cannot list albums recursively.
-For finding albums, use the `albums` command.
+For finding albums, use the `albums` command. By default, the command only list personal albums, use the option `-s` to include shared albums as well:
 
 ```bash
->> synophotos albums
+>> synophotos albums -s
 
   id │ name          │ item_count │ owner_user_id │ shared
 ╶────┼───────────────┼────────────┼───────────────┼────────╴
   2  │ 'My Birthday' │ 31         │ 2             │ True
+  1  │ 'Private'     │ 10         │ 2             │ False
+```
+
+Optionally the list can be restricted to include albums only with matching provided names (case-insensitive): 
+
+```bash
+>> synophotos albums -s private
+
+  id │ name          │ item_count │ owner_user_id │ shared
+╶────┼───────────────┼────────────┼───────────────┼────────╴
   1  │ 'Private'     │ 10         │ 2             │ False
 ```
 
@@ -265,8 +275,11 @@ Options:
   --help                  Show this message and exit.
 ```
 
-It takes one or more strings which are matched against all existing albums, including shared ones. All items from those albums will be downloaded to the
-provided destination folder. **Important: any .jpg files in the destination folder which are not contained in the given albums will be removed!**
+It takes optionally one or more arguments which are considered parts of album names. If provided only albums which have
+matching names (case-insensitive) are included, including shared ones. All items from those albums will be downloaded to the
+provided destination folder. 
+
+**Important: any .jpg files in the destination folder which are not contained in the given albums will be removed!**
 
 ```
 ❯ synophotos sync -d ~/Temp holiday birthday
