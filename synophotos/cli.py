@@ -281,8 +281,9 @@ def sync( ctx: ApplicationContext, albums: Tuple[str], destination: str ):
 	if not confirm( msg, ctx.force ):
 		return
 
-	for i, a, p in result.additions:
-		write_item( *synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='xl' ), result.fs, p )
+	for i, a in result.additions:
+		item, contents = synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='xl' )
+		write_item( item, contents, result.fs )
 	for p in result.removals:
 		remove_item( result.fs, p )
 
