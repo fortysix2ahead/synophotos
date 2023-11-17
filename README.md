@@ -51,3 +51,4 @@ The complete documentation is hosted at readthedocs.io: [http://synophotos.readt
 ## Related Projects
 
 - Synology API Wrapper (https://github.com/N4S4/synology-api)
+- Unofficial Synology Photos API Documentation (https://github.com/zeichensatz/SynologyPhotosAPI)
