@@ -302,7 +302,7 @@ To display the currently active profile, use the `profile` command:
 
 ```bash
 >> synophotos profile
-bethany
+default_profile ( bethany at https://sampleserver.example.com )
 ```
 
 ### Show
