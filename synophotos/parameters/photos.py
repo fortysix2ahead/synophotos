@@ -70,6 +70,7 @@ GET1 = { 'method': 'get', 'version': 1 }
 GET2 = { 'method': 'get', 'version': 2 }
 GET4 = { 'method': 'get', 'version': 4 }
 GET5 = { 'method': 'get', 'version': 5 }
+GET_EXIF1 = { 'method': 'get_exif', 'version': 1 }
 LIST2 = { 'method': 'list', 'version': 2, 'offset': 0, 'limit': 5000 } # todo: not sure about limits, these may vary depending on items/folders/albums
 LIST4 = { 'method': 'list', 'version': 4, 'offset': 0, 'limit': 100 }
 SET_SHARED1 = { 'method': 'set_shared', 'version': 1 }
@@ -89,6 +90,7 @@ GET_SHARED_ITEM = API_BROWSE_ITEM | GET5 | {
 	'passphrase': ...,
 	'additional': '["description","tag","exif","resolution","orientation","gps","video_meta","video_convert","thumbnail","address","geocoding_id","rating","motion_photo","provider_user_id","person"]'
 }
+GET_EXIF = GET_EXIF1 | { 'id': '[...]' }
 
 # download item
 
