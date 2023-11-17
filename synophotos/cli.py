@@ -16,7 +16,7 @@ log = getLogger( __name__ )
 
 synophotos: Optional[SynoPhotos] = None  # global variable for functions below
 
-no_login_commands = [ 'init', 'version' ]
+no_login_commands = [ 'init', 'profile', 'version' ]
 
 @group
 @option( '-d', '--debug', is_flag=True, required=False, default=False, help='outputs debug information (implies --verbose)' )
@@ -311,7 +311,8 @@ def version( ctx: ApplicationContext ):
 @cli.command( 'profile', help='shows the name of the currently active profile' )
 @pass_obj
 def profile( ctx: ApplicationContext ):
-	pp( ctx.config.profile )
+	pn, p = ctx.config.profile, ctx.config.profiles.get( ctx.config.profile )
+	pp( f'{pn} ( {p.account} at {p.url} )' )
 
 def _ws( ctx: ApplicationContext ) -> SynoPhotos:
 	return cast( SynoPhotos, ctx.service )
