@@ -47,3 +47,7 @@ Run synophotos to check what albums you have:
 ## Installation, Getting Started and Command Reference
 
 The complete documentation is hosted at readthedocs.io: [http://synophotos.readthedocs.io/](http://synophotos.readthedocs.io/).
+
+## Related Projects
+
+- Synology API Wrapper (https://github.com/N4S4/synology-api)
