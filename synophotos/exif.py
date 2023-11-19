@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from logging import getLogger
 from re import compile as rx_compile
 from typing import Dict
@@ -11,6 +12,7 @@ from more_itertools import first
 from synophotos.webservice import SynoResponse
 
 rx_lat_lon = rx_compile( r'(\d+)deg (\d+)\' (\d+)\"' )
+rx_datetime = rx_compile( r'(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)' )
 
 log = getLogger( __name__ )
 
@@ -170,9 +172,14 @@ class SynoExif:
 		self.set( img, 'image_description', self.image_description )
 
 		# date and time, format: YYYY:MM:DD hh:mm:ss
-		self.set( img, 'datetime', self.date_and_time )
-		self.set( img, 'datetime_digitized', self.date_and_time )
-		self.set( img, 'datetime_original', self.date_and_time )
+		# if missing, use modified time from item
+		if not self.date_and_time:
+			self.data['Date and Time'] = item.modified.strftime( '%Y:%m:%d %H:%M:%S' )
+
+		if self.date_and_time:
+			self.set( img, 'datetime', self.date_and_time )
+			self.set( img, 'datetime_digitized', self.date_and_time )
+			self.set( img, 'datetime_original', self.date_and_time )
 
 		# time zone offset
 		if self.offset_time:
