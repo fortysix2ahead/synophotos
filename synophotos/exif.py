@@ -6,6 +6,9 @@ from typing import Dict
 
 from attrs import define, field
 from exif import Image
+from more_itertools import first
+
+from synophotos.webservice import SynoResponse
 
 rx_lat_lon = rx_compile( r'(\d+)deg (\d+)\' (\d+)\"' )
 
@@ -15,6 +18,13 @@ log = getLogger( __name__ )
 class SynoExif:
 
 	data: Dict = field( factory=dict )
+	response: SynoResponse = field( default=None )
+
+	def __attrs_post_init__( self ):
+		if self.response and self.response.success:
+			# who the f*** is resonsible for this response payload???
+			exif_list = first( self.response.data.get( 'list' ), {} ).get( 'exif', [] )
+			self.data = { x.get( 'key' ): x.get( 'value' ) for x in exif_list }
 
 	@property
 	def city( self ):

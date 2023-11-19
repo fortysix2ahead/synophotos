@@ -294,7 +294,9 @@ class SynoPhotos( SynoWebService ):
 	def create_folder( self, name: str, parent_id: int = 0 ) -> int:
 		return self.get( ENTRY_URL, {**CREATE_FOLDER, 'name': f'\"{name}\"', 'target_id': parent_id} )
 
-	def exif( self, item_id: int ) -> Dict:
+	def exif( self, item_id: int ) -> SynoExif:
+		return SynoExif( response=self.entry( GET_EXIF, id=f'[{item_id}]' ) )
+
 		response = self.entry( GET_EXIF, id=f'[{item_id}]' )
 		# who the f*** is resonsible for this response payload??? # todo: put this in Exif class?
 		return  { x.get( 'key' ): x.get( 'value' ) for x in first( response.data.get( 'list' ) ).get( 'exif' ) }
@@ -311,8 +313,7 @@ class SynoPhotos( SynoWebService ):
 			raise NotImplementedError
 
 		if include_exif:
-			exif = SynoExif( data = self.exif( item_id ) )
-			binary = exif.apply( binary, _item )
+			binary = self.exif( item_id ).apply( binary, _item )
 
 		return _item, binary
 
