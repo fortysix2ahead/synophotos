@@ -90,7 +90,7 @@ GET_SHARED_ITEM = API_BROWSE_ITEM | GET5 | {
 	'passphrase': ...,
 	'additional': '["description","tag","exif","resolution","orientation","gps","video_meta","video_convert","thumbnail","address","geocoding_id","rating","motion_photo","provider_user_id","person"]'
 }
-GET_EXIF = GET_EXIF1 | { 'id': '[...]' }
+GET_EXIF = API_BROWSE_ITEM | GET_EXIF1 | { 'id': '[...]' }
 
 # download item
 
