@@ -283,7 +283,7 @@ def sync( ctx: ApplicationContext, albums: Tuple[str], destination: str ):
 		return
 
 	for i, a in result.additions:
-		item, contents = synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='xl' )
+		item, contents = synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='xl', include_exif=True )
 		write_item( item, contents, result.fs )
 	for p in result.removals:
 		remove_item( result.fs, p )
