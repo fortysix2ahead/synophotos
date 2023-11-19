@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from logging import getLogger
 from re import compile as rx_compile
 from typing import Dict
 
@@ -7,6 +8,8 @@ from attrs import define, field
 from exif import Image
 
 rx_lat_lon = rx_compile( r'(\d+)deg (\d+)\' (\d+)\"' )
+
+log = getLogger( __name__ )
 
 @define
 class SynoExif:
@@ -109,21 +112,27 @@ class SynoExif:
 		if value is not None:
 			img.set( attribute, value )
 
-	def set_gps_data( self, img ):
+	def set_gps_data( self, img, item ):
 		lat, lon, lat_ref, lon_ref = None, None, None, None
-		if match := rx_lat_lon.fullmatch( self.gps_latitude ):
-			lat = tuple( float( v ) for v in match.groups() )
-		if match := rx_lat_lon.fullmatch( self.gps_longitude ):
-			lon = tuple( float( v ) for v in match.groups() )
-		if self.gps_latitude_ref and self.gps_longitude_ref:
-			lat_ref = 'N' if self.gps_latitude_ref == 'North' else 'S'
-			lon_ref = 'E' if self.gps_longitude_ref == 'East' else 'W'
+		try:
+			if match := rx_lat_lon.fullmatch( self.gps_latitude ):
+				lat = tuple( float( v ) for v in match.groups() )
+			if match := rx_lat_lon.fullmatch( self.gps_longitude ):
+				lon = tuple( float( v ) for v in match.groups() )
+			if self.gps_latitude_ref and self.gps_longitude_ref:
+				lat_ref = 'N' if self.gps_latitude_ref == 'North' else 'S'
+				lon_ref = 'E' if self.gps_longitude_ref == 'East' else 'W'
+		except TypeError: # catch cases when no gps data exists
+			pass
 
 		if lat and lon and lat_ref and lon_ref:
 			self.set( img, 'gps_latitude', lat )
 			self.set( img, 'gps_longitude', lon )
 			self.set( img, 'gps_latitude_ref', lat_ref )
 			self.set( img, 'gps_longitude_ref', lon_ref )
+			log.info( f'setting GPS data for {item.filename} \[id {item.id}] to {lat} {lat_ref} / {lon} {lon_ref}' )
+		else:
+			log.info( f'unable to set GPS data for {item.filename} (id {item.id}) (no valid data available)' )
 
 	# todo: location data CANNOT be saved in EXIF, IPTC/XMP must be used instead
 	def set_location_data( self, img ):
@@ -156,13 +165,15 @@ class SynoExif:
 		self.set( img, 'datetime_original', self.date_and_time )
 
 		# time zone offset
-		offset_time = self.offset_time if self.offset_time else '+00:00'
-		self.set( img, 'offset_time', offset_time )
-		self.set( img, 'offset_time_digitized', offset_time )
-		self.set( img, 'offset_time_original', offset_time )
+		if self.offset_time:
+			self.set( img, 'offset_time', self.offset_time )
+			self.set( img, 'offset_time_digitized', self.offset_time )
+			self.set( img, 'offset_time_original', self.offset_time )
+
+		log.info( f'setting time data for {item.filename} \[id {item.id}] to {self.date_and_time}, offset {self.offset_time}' )
 
 		# GPS data
-		self.set_gps_data( img )
+		self.set_gps_data( img, item )
 
 		# location data
 		self.set_location_data( img )
