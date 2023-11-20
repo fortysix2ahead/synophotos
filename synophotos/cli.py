@@ -7,7 +7,7 @@ from fs.osfs import OSFS
 from more_itertools import flatten
 from yaml import safe_dump
 
-from synophotos import ApplicationContext, __version__
+from synophotos import ApplicationContext, __version__, teardown
 from synophotos.fsio import prepare_sync_albums, remove_item, write_item
 from synophotos.photos import SynoPhotos, ThumbnailSize
 from synophotos.ui import confirm, pprint, pprint as pp, print_error, print_obj, print_obj_table, table_for
@@ -25,6 +25,8 @@ no_login_commands = [ 'init', 'profile', 'version' ]
 @pass_context
 def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
 	ctx.obj = ApplicationContext( verbose=verbose, debug=debug, force=force )
+
+	ctx.call_on_close( teardown )
 
 	if ctx.obj.config.active_profile:
 		# create (global) service (to ease login) and add to context
