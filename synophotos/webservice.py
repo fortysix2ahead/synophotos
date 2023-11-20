@@ -11,6 +11,7 @@ from rich.pretty import pretty_repr
 from rich.prompt import Prompt
 from typing_extensions import Protocol
 
+from synophotos import Cache
 from synophotos.error_codes import CODE_SUCCESS, CODE_UNKNOWN, error_codes
 from synophotos.parameters.photos import SID
 from synophotos.parameters.webservice import ENTRY_URL, LOGIN_PARAMS
@@ -123,6 +124,7 @@ class SynoWebService:
 	password: str = field( default=None )
 
 	session: SynoSession = field( default=None )
+	cache: Cache = field( default=None )
 
 	@property
 	def session_id( self ) -> Optional[str]:
@@ -131,6 +133,10 @@ class SynoWebService:
 	@property
 	def device_id( self ) -> Optional[str]:
 		return self.session.device_id if self.session else None
+
+	def enable_cache( self, cache: Cache ) -> None:
+		self.cache = cache if cache else Cache()
+		self.cache.enabled = True
 
 	def entry( self, payload: Dict, **kwargs ) -> SynoResponse:
 		return self.get( ENTRY_URL, payload, **kwargs )

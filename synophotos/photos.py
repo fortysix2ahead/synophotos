@@ -297,10 +297,6 @@ class SynoPhotos( SynoWebService ):
 	def exif( self, item_id: int ) -> SynoExif:
 		return SynoExif( response=self.entry( GET_EXIF, id=f'[{item_id}]' ) )
 
-		response = self.entry( GET_EXIF, id=f'[{item_id}]' )
-		# who the f*** is resonsible for this response payload??? # todo: put this in Exif class?
-		return  { x.get( 'key' ): x.get( 'value' ) for x in first( response.data.get( 'list' ) ).get( 'exif' ) }
-
 	def download( self, item_id: int, passphrase: str = None, thumbnail: Optional[ThumbnailSize] = None, include_exif = False ) -> Tuple[Item, bytes]:
 		_item, binary = self.item( item_id, passphrase ), b''
 		if thumbnail:
@@ -338,9 +334,14 @@ class SynoPhotos( SynoWebService ):
 
 	def item( self, id: int, passphrase: str = None ) -> Optional[Item]:
 		if passphrase:
-			return first( self.entry( GET_SHARED_ITEM, id=f'[{id}]', passphrase=passphrase ).as_obj( List[Item] ), None )
+			i = first( self.entry( GET_SHARED_ITEM, id=f'[{id}]', passphrase=passphrase ).as_obj( List[Item] ), None )
 		else:
-			return first( self.entry( GET_ITEM, id=f'[{id}]' ).as_obj( List[Item] ), None )
+			i = first( self.entry( GET_ITEM, id=f'[{id}]' ).as_obj( List[Item] ), None )
+
+		if i:
+			self.cache.filesize( i.id, i.filesize )
+
+		return i
 
 	def root_folder( self ) -> Folder:
 		return self.folder( 0 )

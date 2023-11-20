@@ -12,7 +12,7 @@ from fs.osfs import OSFS
 from platformdirs import user_config_dir
 from rich.logging import RichHandler
 
-from synophotos.cache import Cache
+from synophotos.cache import Cache, dumps as dump_cache, loads as load_cache
 from synophotos.ui import dataclass_table
 from synophotos.webservice import SynoSession, WebService
 
@@ -69,6 +69,8 @@ class Config:
 	force: bool = field( default=False )
 	verbose: bool = field( default=False )
 
+	cache: bool = field( default=False ) # turn off by default, at least for now
+
 	profile: str = field( default=None )
 	profiles: Dict[str, Profile] = field( factory=dict )
 
@@ -114,7 +116,12 @@ class ApplicationContext:
 	def __load_config_files( self ):
 		self.config = self.__load_file( CONFIG_FILE, Config, exit_on_fail=False )
 		# self.sessions = self.__load_file( SESSIONS_FILE, Dict[str, SynoSession], False )
-		self.cache = self.__load_file( CACHE_FILE, Cache, exit_on_fail=False )
+
+		try:
+			if self.config.cache:
+				self.cache = load_cache( CFG_FS.readtext( CACHE_FILE, 'UTF-8' ) )
+		except ResourceNotFound:
+			log.debug( f'unable to read cache file', exc_info=True )
 
 	# noinspection PyMethodMayBeStatic
 	def __load_file( self, filename: str, cls: Type[T] = None, exit_on_fail: bool = True ) -> Optional[T]:
@@ -127,10 +134,11 @@ class ApplicationContext:
 			return cls()
 
 	def save_config_files( self ):
-		try:
-			CFG_FS.writetext( CACHE_FILE, CONVERTER.dumps( self.cache, Cache ), 'UTF-8' )
-		except ResourceNotFound:
-			log.error( f'unable to write file {CACHE_FILE}', exc_info=True )
+			try:
+				if self.config.cache:
+					CFG_FS.writetext( CACHE_FILE, dump_cache( self.cache ), 'UTF-8' )
+			except ResourceNotFound:
+				log.error( f'unable to write file {CACHE_FILE}', exc_info=True )
 
 	@property
 	def url( self ) -> str:

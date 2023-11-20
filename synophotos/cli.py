@@ -1,10 +1,9 @@
 from logging import getLogger
 from sys import exit as sysexit
-from typing import List, Optional, Tuple, cast
+from typing import Optional, Tuple, cast
 
 from click import Context, argument, group, option, pass_context, pass_obj
 from fs.osfs import OSFS
-from more_itertools import flatten
 from yaml import safe_dump
 
 from synophotos import ApplicationContext, __version__, teardown
@@ -32,6 +31,10 @@ def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
 		# create (global) service (to ease login) and add to context
 		global synophotos
 		synophotos = SynoPhotos( url=ctx.obj.url, account=ctx.obj.account, password=ctx.obj.password, session=ctx.obj.session )
+		if ctx.obj.config.cache:
+			synophotos.enable_cache( ctx.obj.cache )
+			log.info( f'enabled cache: {len( ctx.obj.cache.filesizes )} filesize entries' )
+
 		ctx.obj.service = synophotos
 
 		# attempt to log in
