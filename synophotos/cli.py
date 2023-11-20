@@ -223,17 +223,18 @@ def search( ctx: ApplicationContext, name: str ):
 
 @cli.command( help='download items' )
 @option( '-d', '--destination', required=True, help='destination folder for downloaded items' )
+@option( '-e', '--exif', hidden=True, required=False, is_flag=True, default=False, help='fetch exif data' )
 @option( '-s', '--size', required=False, default='original', help='download image in specified size, can be one of [sm, m, xl, original]' )
 @argument( 'id', nargs=1, required=True )
 @pass_obj
-def download( ctx: ApplicationContext, destination: str, id: int, size: ThumbnailSize ):
+def download( ctx: ApplicationContext, destination: str, id: int, size: ThumbnailSize, exif: bool ):
 	if size == 'original':
 		size = 'xl'
 		log.warning( 'download original images is currently not supported, falling back to XL thumbnails' )
 
 	fs = OSFS( root_path=destination, expand_vars=True, create=True )
 
-	item, contents = synophotos.download( id, thumbnail=size )
+	item, contents = synophotos.download( id, thumbnail=size, include_exif=exif )
 	folder = synophotos.folder( item.folder_id )
 
 	fs.makedirs( folder.name, recreate=True )
@@ -282,7 +283,7 @@ def sync( ctx: ApplicationContext, albums: Tuple[str], destination: str ):
 		return
 
 	for i, a in result.additions:
-		item, contents = synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='xl' )
+		item, contents = synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='xl', include_exif=True )
 		write_item( item, contents, result.fs )
 	for p in result.removals:
 		remove_item( result.fs, p )

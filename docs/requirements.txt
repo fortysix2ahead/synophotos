@@ -1,6 +1,7 @@
 attrs
 cattrs
 click
+exif
 fs
 mkdocs
 mkdocs-click

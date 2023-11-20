@@ -9,6 +9,7 @@ from cattrs import Converter
 from cattrs.preconf.json import make_converter
 from more_itertools import first
 
+from synophotos.exif import SynoExif
 from synophotos.parameters.photos import *
 from synophotos.parameters.webservice import ENTRY_URL
 from synophotos.webservice import SynoResponse, SynoWebService
@@ -293,7 +294,14 @@ class SynoPhotos( SynoWebService ):
 	def create_folder( self, name: str, parent_id: int = 0 ) -> int:
 		return self.get( ENTRY_URL, {**CREATE_FOLDER, 'name': f'\"{name}\"', 'target_id': parent_id} )
 
-	def download( self, item_id: int, passphrase: str = None, thumbnail: Optional[ThumbnailSize] = None ) -> Tuple[Item, bytes]:
+	def exif( self, item_id: int ) -> SynoExif:
+		return SynoExif( response=self.entry( GET_EXIF, id=f'[{item_id}]' ) )
+
+		response = self.entry( GET_EXIF, id=f'[{item_id}]' )
+		# who the f*** is resonsible for this response payload??? # todo: put this in Exif class?
+		return  { x.get( 'key' ): x.get( 'value' ) for x in first( response.data.get( 'list' ) ).get( 'exif' ) }
+
+	def download( self, item_id: int, passphrase: str = None, thumbnail: Optional[ThumbnailSize] = None, include_exif = False ) -> Tuple[Item, bytes]:
 		_item, binary = self.item( item_id, passphrase ), b''
 		if thumbnail:
 			if passphrase:
@@ -303,6 +311,9 @@ class SynoPhotos( SynoWebService ):
 			binary = response.response.content
 		else:
 			raise NotImplementedError
+
+		if include_exif:
+			binary = self.exif( item_id ).apply( binary, _item )
 
 		return _item, binary
 

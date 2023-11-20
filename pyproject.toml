@@ -18,6 +18,7 @@ dependencies = [
   'attrs ~= 23.1.0',
   'cattrs ~= 23.1.2',
   'click ~= 8.1.7',
+  'exif ~= 1.6.0',
   'fs ~= 2.4.16',
   'more-itertools ~= 10.1.0',
   'platformdirs ~= 4.0.0',
