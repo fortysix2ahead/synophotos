@@ -6,11 +6,13 @@ from typing import Dict, Optional, Type, TypeVar
 
 from attrs import define, field
 from cattrs.preconf.pyyaml import make_converter
+from click import get_current_context
 from fs.errors import ResourceNotFound
 from fs.osfs import OSFS
 from platformdirs import user_config_dir
 from rich.logging import RichHandler
 
+from synophotos.cache import Cache, dumps as dump_cache, loads as load_cache
 from synophotos.ui import dataclass_table
 from synophotos.webservice import SynoSession, WebService
 
@@ -27,6 +29,7 @@ CFG_FS = OSFS( root_path=CFG_DIR, create=True, expand_vars=True )
 
 CONFIG_FILE = 'config.yaml'
 SESSIONS_FILE = 'sessions.yaml'
+CACHE_FILE = 'cache.yaml'
 
 DEFAULT_CONFIG = {
 	'profile': 'sample_profile',
@@ -66,6 +69,8 @@ class Config:
 	force: bool = field( default=False )
 	verbose: bool = field( default=False )
 
+	cache: bool = field( default=False ) # turn off by default, at least for now
+
 	profile: str = field( default=None )
 	profiles: Dict[str, Profile] = field( factory=dict )
 
@@ -78,6 +83,7 @@ class ApplicationContext:
 
 	config: Config = field( factory=Config )
 	sessions: Dict[str, SynoSession] = field( factory=dict )
+	cache: Cache = field( factory=Cache )
 
 	debug: bool = field( default=False )
 	force: bool = field( default=False )
@@ -111,6 +117,12 @@ class ApplicationContext:
 		self.config = self.__load_file( CONFIG_FILE, Config, exit_on_fail=False )
 		# self.sessions = self.__load_file( SESSIONS_FILE, Dict[str, SynoSession], False )
 
+		try:
+			if self.config.cache:
+				self.cache = load_cache( CFG_FS.readtext( CACHE_FILE, 'UTF-8' ) )
+		except ResourceNotFound:
+			log.debug( f'unable to read cache file', exc_info=True )
+
 	# noinspection PyMethodMayBeStatic
 	def __load_file( self, filename: str, cls: Type[T] = None, exit_on_fail: bool = True ) -> Optional[T]:
 		try:
@@ -119,7 +131,14 @@ class ApplicationContext:
 			log.debug( f'unable to read file {filename}', exc_info=True )
 			if exit_on_fail:
 				sysexit( -1 )
-			return Config()
+			return cls()
+
+	def save_config_files( self ):
+			try:
+				if self.config.cache:
+					CFG_FS.writetext( CACHE_FILE, dump_cache( self.cache ), 'UTF-8' )
+			except ResourceNotFound:
+				log.error( f'unable to write file {CACHE_FILE}', exc_info=True )
 
 	@property
 	def url( self ) -> str:
@@ -136,3 +155,8 @@ class ApplicationContext:
 	@property
 	def session( self ) -> SynoSession:
 		return self.sessions.get( self.config.profile )
+
+def teardown():
+	ctx = get_current_context().obj
+	ctx.save_config_files()
+

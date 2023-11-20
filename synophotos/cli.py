@@ -1,13 +1,12 @@
 from logging import getLogger
 from sys import exit as sysexit
-from typing import List, Optional, Tuple, cast
+from typing import Optional, Tuple, cast
 
 from click import Context, argument, group, option, pass_context, pass_obj
 from fs.osfs import OSFS
-from more_itertools import flatten
 from yaml import safe_dump
 
-from synophotos import ApplicationContext, __version__
+from synophotos import ApplicationContext, __version__, teardown
 from synophotos.fsio import prepare_sync_albums, remove_item, write_item
 from synophotos.photos import SynoPhotos, ThumbnailSize
 from synophotos.ui import confirm, pprint, pprint as pp, print_error, print_obj, print_obj_table, table_for
@@ -26,10 +25,16 @@ no_login_commands = [ 'init', 'profile', 'version' ]
 def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
 	ctx.obj = ApplicationContext( verbose=verbose, debug=debug, force=force )
 
+	ctx.call_on_close( teardown )
+
 	if ctx.obj.config.active_profile:
 		# create (global) service (to ease login) and add to context
 		global synophotos
 		synophotos = SynoPhotos( url=ctx.obj.url, account=ctx.obj.account, password=ctx.obj.password, session=ctx.obj.session )
+		if ctx.obj.config.cache:
+			synophotos.enable_cache( ctx.obj.cache )
+			log.info( f'enabled cache: {len( ctx.obj.cache.filesizes )} filesize entries' )
+
 		ctx.obj.service = synophotos
 
 		# attempt to log in
