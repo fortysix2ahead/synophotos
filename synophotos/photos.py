@@ -311,6 +311,8 @@ class SynoPhotos( SynoWebService ):
 		if include_exif:
 			binary = self.exif( item_id ).apply( binary, _item )
 
+		log.info( f'downloaded item {_item.filename} (id {_item.id}, {_item.filesize} bytes)' )
+
 		return _item, binary
 
 	# helpers
@@ -334,14 +336,9 @@ class SynoPhotos( SynoWebService ):
 
 	def item( self, id: int, passphrase: str = None ) -> Optional[Item]:
 		if passphrase:
-			i = first( self.entry( GET_SHARED_ITEM, id=f'[{id}]', passphrase=passphrase ).as_obj( List[Item] ), None )
+			return first( self.entry( GET_SHARED_ITEM, id=f'[{id}]', passphrase=passphrase ).as_obj( List[Item] ), None )
 		else:
-			i = first( self.entry( GET_ITEM, id=f'[{id}]' ).as_obj( List[Item] ), None )
-
-		if i:
-			self.cache.filesize( i.id, i.filesize )
-
-		return i
+			return first( self.entry( GET_ITEM, id=f'[{id}]' ).as_obj( List[Item] ), None )
 
 	def root_folder( self ) -> Folder:
 		return self.folder( 0 )

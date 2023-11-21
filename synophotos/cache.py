@@ -11,12 +11,8 @@ class Cache:
 
 	filesizes: Dict[int, int] = field( factory=dict )
 
-	def filesize( self, item_id: int, filesize: int ):
-		if self.enabled:
-			self.filesizes[item_id] = filesize
-
 	def cmp_filesize( self, item_id: int, filesize: int ) -> bool:
-		return filesize == self.filesizes.get( item_id )
+		return filesize == self.filesizes.get( item_id ) if self.enabled else False
 
 # structuring/unstructuring
 

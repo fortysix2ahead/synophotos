@@ -33,7 +33,6 @@ def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
 		synophotos = SynoPhotos( url=ctx.obj.url, account=ctx.obj.account, password=ctx.obj.password, session=ctx.obj.session )
 		if ctx.obj.config.cache:
 			synophotos.enable_cache( ctx.obj.cache )
-			log.info( f'enabled cache: {len( ctx.obj.cache.filesizes )} filesize entries' )
 
 		ctx.obj.service = synophotos
 
@@ -267,28 +266,30 @@ def show( ctx: ApplicationContext, album_id: bool, folder_id, item_id: bool, id:
 # noinspection PyShadowingNames
 @cli.command( help='sync' )
 # @option( '-a', '--album', required=False, is_flag=True, help='treat arguments as albums (the default)' ) # for now only sync albums
+@option( '-c', '--use-cache', required=False, is_flag=True, default=False, hidden=True, help='use filesize cache to detect updates (experimental)' )
 @option( '-d', '--destination', required=True, is_flag=False, help='destination folder to sync to' )
 @argument( 'albums', nargs=-1, required=False )
 @pass_obj
-def sync( ctx: ApplicationContext, albums: Tuple[str], destination: str ):
+def sync( ctx: ApplicationContext, albums: Tuple[str], destination: str, use_cache: bool ):
 	# get all existing items in all albums to be synced
 	all_albums = synophotos.albums( *albums, include_shared=True )
 	albums = { a: [] for a in all_albums }
 	for a in albums.keys():
 		albums[a] = synophotos.list_album_items( a.id )
 
-	result = prepare_sync_albums( albums, destination )
+	result = prepare_sync_albums( albums, destination, use_cache )
 
-	if len( result.additions ) == 0 and len( result.removals ) == 0:
+	if ( len( result.additions ), len( result.updates ), len( result.removals ) ) == (0, 0, 0 ):
 		pprint( f'Skipping {len( result.skips )} files, nothing to do ...' )
 		return
 
-	msg = f'Sync will [green]add {len( result.additions )} files[/green], [red]remove {len( result.removals )} files[/red] and [yellow]skip {len( result.skips )} files[/yellow], continue?'
+	msg = ( 'Sync: [green]{} additions[/green], [yellow]{} updates[/yellow], [red]{} removals[/red] and [blue]{} skips[/blue], continue?'.format( *result.lengths() ) )
 	if not confirm( msg, ctx.force ):
 		return
 
-	for i, a in result.additions:
+	for i, a in [ *result.additions, *result.updates ]:
 		item, contents = synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='xl', include_exif=True )
+		ctx.cache.filesizes[item.id] = item.filesize
 		write_item( item, contents, result.fs )
 	for p in result.removals:
 		remove_item( result.fs, p )
