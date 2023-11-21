@@ -1,10 +1,12 @@
 from logging import getLogger
 from os.path import dirname
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from attrs import define, field
+from click import get_current_context
 from fs.osfs import OSFS
 
+from synophotos import Cache
 from synophotos.photos import Album, Item
 
 log = getLogger( __name__ )
@@ -18,7 +20,16 @@ class SyncResult:
 	skips: List[Tuple[Item, Album]] = field( factory=list )
 	removals: List[str] = field( factory=list )
 
-def prepare_sync_albums( albums: Dict[Album, List[Item]], destination: str ) -> SyncResult:
+	def lengths( self ) -> Tuple[int, int, int, int]:
+		return len( self.additions ), len( self.updates ), len( self.removals ), len( self.skips )
+
+def prepare_sync_albums( albums: Dict[Album, List[Item]], destination: str, use_cache: bool = False ) -> SyncResult:
+	if use_cache:
+		cache = get_current_context().obj.cache
+		log.info( f'using cache with {len( cache.filesizes )} filesize entries to detect updates' )
+	else:
+		cache = None
+
 	fs = OSFS( root_path=destination, expand_vars=True, create=True )
 	result = SyncResult( fs = fs )
 
@@ -27,20 +38,27 @@ def prepare_sync_albums( albums: Dict[Album, List[Item]], destination: str ) -> 
 			# path = f'/{album.id} - {album.name}/{item.filename}' # don't use album name as it might contain characters which cannot be used in filenames
 			if not fs.exists( _item_path( item ) ):
 				result.additions.append( ( item, album ) )
-			elif False:
-				result.updates.append( (item, album ) ) # todo: updates seem impossible as items do not have a last_modified field
+			elif cache and not cache.cmp_filesize( item.id, item.filesize ):
+				# todo: updates seem (almost) impossible as items do not have a last_modified field
+				# work around: remember file sizes and check if there are any changes
+				result.updates.append( (item, album ) )
 			else:
 				result.skips.append( (item, album ) )
 
 	# deduplicate results
 	result.additions = list( {i.id: (i, a) for i, a in result.additions}.values() )
+	result.updates = list( {i.id: (i, a) for i, a in result.updates}.values() )
 	result.skips = list( {i.id: (i, a) for i, a in result.skips}.values() )
 
 	# check for removals
-	added, skipped = [ _item_path( r[0] ) for r in result.additions ], [ _item_path( r[0] ) for r in result.skips ]
+	paths = [ _item_path( r[0] ) for r in result.additions ]
+	paths.extend( [ _item_path( r[0] ) for r in result.updates ] )
+	paths.extend( [ _item_path( r[0] ) for r in result.skips ] )
 	for f in fs.walk.files( filter=[ '*.jpg', '*.jpeg' ] ):
-		if f not in added and f not in skipped:
+		if f not in paths:
 			result.removals.append( f )
+
+	log.info( f'sync result preparation (add/update/remove/skip): {result.lengths()}' )
 
 	return result
 
