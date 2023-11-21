@@ -1,5 +1,17 @@
 # Changelog
 
+## rel-0.2.2 - 2023-11-21
+
+### What's Changed
+
+- init, profile and version commands don't require login() by @fortysix2ahead in https://github.com/fortysix2ahead/synophotos/pull/23
+- Reverse sync behaviour by @fortysix2ahead in https://github.com/fortysix2ahead/synophotos/pull/25
+- Use folder id for path creation instead of album id/name by @fortysix2ahead in https://github.com/fortysix2ahead/synophotos/pull/26
+- Added deduplication of results before download by @fortysix2ahead in https://github.com/fortysix2ahead/synophotos/pull/28
+- Show user and url in profile command by @fortysix2ahead in https://github.com/fortysix2ahead/synophotos/pull/34
+
+**Full Changelog**: https://github.com/fortysix2ahead/synophotos/compare/rel-0.2.1...rel-0.2.2
+
 ## [0.2.2] - 2023-11-17
 
 ### What's Changed
