@@ -16,7 +16,7 @@ from synophotos.cache import Cache, dumps as dump_cache, loads as load_cache
 from synophotos.ui import dataclass_table
 from synophotos.webservice import SynoSession, WebService
 
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 
 log = getLogger( __name__ )
 
