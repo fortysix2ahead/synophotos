@@ -1,5 +1,17 @@
 # Changelog
 
+## rel-0.2.3 - 2023-11-21
+
+### What's Changed
+
+- Add getting exif information by @fortysix2ahead in https://github.com/fortysix2ahead/synophotos/pull/37
+- Add cache for items filesizes by @fortysix2ahead in https://github.com/fortysix2ahead/synophotos/pull/42
+- Use filesize cache to detect updates by @fortysix2ahead in https://github.com/fortysix2ahead/synophotos/pull/44
+- Update cattrs requirement from ~=23.1.2 to >=23.1.2,<23.3.0 by @dependabot in https://github.com/fortysix2ahead/synophotos/pull/40
+- Update rich requirement from ~=13.6.0 to >=13.6,<13.8 by @dependabot in https://github.com/fortysix2ahead/synophotos/pull/41
+
+**Full Changelog**: https://github.com/fortysix2ahead/synophotos/compare/rel-0.2.2...rel-0.2.3
+
 ## [0.2.3] - 2023-11-21
 
 ### What's Changed
