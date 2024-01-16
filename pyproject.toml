@@ -34,7 +34,7 @@ dev = [
   "flit~=3.9.0",
   "mkdocs~=1.5.3",
   "mkdocs-click~=0.8.1",
-  "mkdocs-material~=9.4.7"
+  "mkdocs-material>=9.4.7,<9.6.0"
 ]
 
 [project.urls]
