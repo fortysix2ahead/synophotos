@@ -1,14 +1,14 @@
-attrs~=23.1.0
+attrs>=23.1,<23.3
 cattrs>=23.1.2,<23.3.0
 click~=8.1.7
 exif~=1.6.0
 fs~=2.4.16
 mkdocs~=1.5.3
 mkdocs-click~=0.8.1
-mkdocs-material~=9.4.7
+mkdocs-material>=9.4.7,<9.6.0
 more-itertools ~= 10.1.0
 platformdirs ~= 4.0.0
 requests~=2.31.0
 rich>=13.6,<13.8
 setuptools~=68.2.2
-typing_extensions>=4.8,<4.10
+typing_extensions~=4.10.0
