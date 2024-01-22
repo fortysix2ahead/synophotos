@@ -283,7 +283,7 @@ def sync( ctx: ApplicationContext, albums: Tuple[str], destination: str, use_cac
 		return
 
 	for i, a in [ *result.additions, *result.updates ]:
-		item, contents = synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='xl', include_exif=True )
+		item, contents = synophotos.download( item_id=i.id, passphrase=a.passphrase, thumbnail='compressed', include_exif=False ) # exif information should be included in compressed mode
 		ctx.cache.filesizes[item.id] = item.filesize
 		write_item( item, contents, result.fs )
 	for p in result.removals:
