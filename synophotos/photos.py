@@ -16,7 +16,7 @@ from synophotos.webservice import SynoResponse, SynoWebService
 
 log = getLogger( __name__ )
 
-ThumbnailSize = Literal['sm', 'm', 'xl', 'original']
+ThumbnailSize = Literal['sm', 'm', 'xl', 'compressed', 'original']
 
 conv = Converter()
 jconv = make_converter()
@@ -299,14 +299,14 @@ class SynoPhotos( SynoWebService ):
 
 	def download( self, item_id: int, passphrase: str = None, thumbnail: Optional[ThumbnailSize] = None, include_exif = False ) -> Tuple[Item, bytes]:
 		_item, binary = self.item( item_id, passphrase ), b''
-		if thumbnail:
-			if passphrase:
-				response = self.entry( DOWNLOAD_SHARED_THUMBNAIL, id=item_id, cache_key=_item.additional.thumbnail.get( 'cache_key' ), passphrase=passphrase )
-			else:
-				response = self.entry( DOWNLOAD_THUMBNAIL, id=item_id, cache_key=_item.additional.thumbnail.get( 'cache_key' ) )
-			binary = response.response.content
+		if thumbnail in ['sm', 'm', 'xl'] :
+			response = self.entry( DOWNLOAD_THUMBNAIL, id=item_id, cache_key=_item.additional.thumbnail.get( 'cache_key' ), passphrase=passphrase )
+		elif thumbnail == 'compressed':
+			response = self.entry( DOWNLOAD_COMPRESSED, item_id=f'[{item_id}]', passphrase=passphrase )
 		else:
-			raise NotImplementedError
+			response = self.entry( DOWNLOAD_ORIGINAL, item_id=f'[{item_id}]', passphrase=passphrase )
+
+		binary = response.as_bytes()
 
 		if include_exif:
 			binary = self.exif( item_id ).apply( binary, _item )

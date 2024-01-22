@@ -51,21 +51,27 @@ class SynoResponse:
 	error_code: int = field( default=None )
 	error_msg: str = field( default=None )
 
+	# noinspection PyTestUnpassedFixture
 	def __attrs_post_init__( self ):
 		self.status_code = self.response.status_code
 		try:
 			json = self.response.json()
 			self.success = json.get( 'success', False )
 			if self.success:
-				self.data = json.get( 'data', { } )
+				self.data = json.get( 'data', {} )
+				self.error_code = CODE_SUCCESS
+				self.error_msg = error_codes.get( CODE_SUCCESS )
 			else:
 				self.error_code = json.get( 'error' ).get( 'code' )
 				self.error_msg = error_codes.get( self.error_code, error_codes.get( CODE_UNKNOWN ) )
 		except JSONDecodeError:
-			self.success = False
+			self.success = True if self.status_code in range( 200, 300 ) else False
 
 	def as_bytes( self ) -> bytes:
 		return self.response.content
+
+	def as_text( self ) -> str:
+		return self.response.text
 
 	def as_list( self, cls: Type[T] ) -> List[T]:
 		return [conv.structure( e, cls ) for e in self.as_dict_list()]
@@ -147,6 +153,7 @@ class SynoWebService:
 			template = template | SID | { '_sid': self.session_id }
 
 		params = template | kwargs  # create variable making debugging easier
+		params = { k: v for k, v in params.items() if v is not None } # throw away all None values
 
 		log.debug( f'[dark_orange]{fn.__name__.upper()}[/dark_orange] {url}' )
 		log.debug( f'[dark_orange]Parameters:[/dark_orange] {pretty_repr( params )}' )

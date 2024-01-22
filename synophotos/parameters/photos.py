@@ -94,9 +94,15 @@ GET_EXIF = API_BROWSE_ITEM | GET_EXIF1 | { 'id': '[...]' }
 
 # download item
 
-# DOWNLOAD_ITEM = API_DOWNLOAD | DOWNLOAD1 | { 'force_download': 'true', 'item_id': '"[0]"', 'download_type': 'source' }
+DOWNLOAD_ORIGINAL = API_DOWNLOAD | DOWNLOAD2 | { 'force_download': 'true', 'item_id': '[0]', 'download_type': 'source' }
+DOWNLOAD_COMPRESSED = API_DOWNLOAD | DOWNLOAD2 | { 'force_download': 'true', 'item_id': '[0]', 'download_type': 'optimized_jpeg' }
+DOWNLOAD_SHARED_ORIGINAL = API_DOWNLOAD | DOWNLOAD2 | { 'force_download': 'true', 'item_id': '[0]', 'download_type': 'source', 'passphrase': ... }
+DOWNLOAD_COMPRESSED_ORIGINAL = API_DOWNLOAD | DOWNLOAD2 | { 'force_download': 'true', 'item_id': '[0]', 'download_type': 'optimized_jpeg', 'passphrase': ... }
+
+# both outdated ??
 DOWNLOAD_ITEM = API_DOWNLOAD | GET1 | { 'mode': 'download', 'id': ..., 'type': 'source' }
 DOWNLOAD_SHARED_ITEM = API_DOWNLOAD_SHARED | DOWNLOAD1 | { 'unit_id': '"[...]"', 'cache_key': ... } # + cache_key="40808_1633659236" ???
+
 DOWNLOAD_THUMBNAIL = API_THUMBNAIL | GET1 | { 'mode': 'download', 'id': ..., 'type': 'unit', 'size': 'xl', 'cache_key': ... }
 DOWNLOAD_SHARED_THUMBNAIL = API_THUMBNAIL | GET2 | { 'id': ..., 'type': 'unit', 'size': 'xl', 'cache_key': ..., 'passphrase': ... }
 
