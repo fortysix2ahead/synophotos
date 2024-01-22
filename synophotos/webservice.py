@@ -153,6 +153,7 @@ class SynoWebService:
 			template = template | SID | { '_sid': self.session_id }
 
 		params = template | kwargs  # create variable making debugging easier
+		params = { k: v for k, v in params.items() if v is not None } # throw away all None values
 
 		log.debug( f'[dark_orange]{fn.__name__.upper()}[/dark_orange] {url}' )
 		log.debug( f'[dark_orange]Parameters:[/dark_orange] {pretty_repr( params )}' )
