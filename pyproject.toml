@@ -21,11 +21,11 @@ dependencies = [
   'exif ~= 1.6.0',
   'fs ~= 2.4.16',
   'more-itertools ~= 10.2.0',
-  'platformdirs >= 4.1,< 4.3',
+  'platformdirs ~= 4.2.0',
   'pyyaml ~= 6.0.1',
   'requests ~= 2.31.0',
-  'rich ~= 13.7.0',
-  'typing_extensions >= 4.9,< 4.11',
+  'rich ~= 13.7.1',
+  'typing_extensions ~= 4.10.0',
 ]
 
 [project.optional-dependencies]
@@ -34,7 +34,7 @@ dev = [
   "flit~=3.9.0",
   "mkdocs~=1.5.3",
   "mkdocs-click~=0.8.1",
-  "mkdocs-material>=9.4.7,<9.6.0"
+  "mkdocs-material~=9.5.14"
 ]
 
 [project.urls]
