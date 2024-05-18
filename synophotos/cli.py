@@ -24,10 +24,9 @@ no_login_commands = [ 'init', 'profile', 'version' ]
 @pass_context
 def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
 	ctx.obj = ApplicationContext( verbose=verbose, debug=debug, force=force )
-
 	ctx.call_on_close( teardown )
 
-	if ctx.obj.config.active_profile:
+	if ctx.obj.config.profile:
 		# create (global) service (to ease login) and add to context
 		global synophotos
 		synophotos = SynoPhotos( url=ctx.obj.url, account=ctx.obj.account, password=ctx.obj.password, session=ctx.obj.session )

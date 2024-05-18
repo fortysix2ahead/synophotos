@@ -2,12 +2,12 @@
 
 from logging import DEBUG, INFO, WARNING, getLogger
 from sys import exit as sysexit
-from typing import Dict, Optional, Type, TypeVar
+from typing import Dict, Optional, Tuple, Type, TypeVar
 
 from attrs import define, field
 from cattrs.preconf.pyyaml import make_converter
 from click import get_current_context
-from dynaconf import Dynaconf
+from dynaconf import Dynaconf, loaders
 from fs.appfs import UserConfigFS
 from fs.errors import ResourceNotFound
 from rich.logging import RichHandler
@@ -28,11 +28,11 @@ T = TypeVar('T')
 APPNAME = 'synophotos'
 
 CFG_FS = UserConfigFS( APPNAME, roaming=True, create=True )
-CFG_DIR = CFG_FS.getospath( '/' ) # can be removed later
 
 CONFIG_FILE = 'config.yaml'
 SESSIONS_FILE = 'sessions.yaml'
 CACHE_FILE = 'cache.yaml'
+SETTINGS_FILE = 'settings.yaml'
 
 DEFAULT_CONFIG = {
 	'profile': 'sample_profile',
@@ -45,11 +45,8 @@ DEFAULT_CONFIG = {
 	}
 }
 
-settings: Dynaconf = Dynaconf(
-	envvar_prefix = 'SYNOPHOTOS',
-	root_path = None,
-	settings_files = [ CONFIG_FILE ],
-)
+settings: Dynaconf = Dynaconf( envvar_prefix = 'SYNOPHOTOS', root_path = CFG_FS.getsyspath( '/' ), settings_files = [ CONFIG_FILE, SETTINGS_FILE ], merge_enabled=True )
+cache: Dynaconf = Dynaconf( root_path = CFG_FS.getsyspath( '/' ), settings_files = [ CACHE_FILE ] )
 
 CONVERTER = make_converter()
 
@@ -76,7 +73,7 @@ class ApplicationContext:
 
 	config: Dynaconf = field( default=settings )
 	sessions: Dict[str, SynoSession] = field( factory=dict )
-	cache: Cache = field( factory=Cache )
+	cache: Cache = field( default=None )
 
 	debug: bool = field( default=False )
 	force: bool = field( default=False )
@@ -85,8 +82,12 @@ class ApplicationContext:
 	service: WebService = field( default=None )
 
 	def __attrs_post_init__( self ):
+		# from dynaconf import inspect_settings
+		# from rich.pretty import pprint
+		# pprint( inspect_settings( settings ) )
+
 		self.__configure_log__()
-		self.__load_config_files()
+		self.cache = Cache( source=cache )
 
 	def __configure_log__( self ):
 		global DEFAULT_HANDLER, VERBOSE_HANDLER, DEBUG_HANDLER
@@ -106,44 +107,23 @@ class ApplicationContext:
 			DEFAULT_HANDLER.setLevel( WARNING )
 			log.setLevel( WARNING )
 
-	def __load_config_files( self ):
-		self.config = self.__load_file( CONFIG_FILE, Config, exit_on_fail=False )
-		# self.sessions = self.__load_file( SESSIONS_FILE, Dict[str, SynoSession], False )
-
-		try:
-			if self.config.cache:
-				self.cache = load_cache( CFG_FS.readtext( CACHE_FILE, 'UTF-8' ) )
-		except ResourceNotFound:
-			log.debug( f'unable to read cache file', exc_info=True )
-
-	# noinspection PyMethodMayBeStatic
-	def __load_file( self, filename: str, cls: Type[T] = None, exit_on_fail: bool = True ) -> Optional[T]:
-		try:
-			return CONVERTER.loads( CFG_FS.readtext( filename ), cls )
-		except ResourceNotFound:
-			log.debug( f'unable to read file {filename}', exc_info=True )
-			if exit_on_fail:
-				sysexit( -1 )
-			return cls()
-
 	def save_config_files( self ):
 			try:
-				if self.config.cache:
-					CFG_FS.writetext( CACHE_FILE, dump_cache( self.cache ), 'UTF-8' )
+				CFG_FS.writetext( CACHE_FILE, dump_cache( self.cache ), 'UTF-8' )
 			except ResourceNotFound:
 				log.error( f'unable to write file {CACHE_FILE}', exc_info=True )
 
 	@property
 	def url( self ) -> str:
-		return self.config.active_profile.url
+		return self.config.profiles[self.config.profile].url
 
 	@property
 	def account( self ) -> str:
-		return self.config.active_profile.account
+		return self.config.profiles[self.config.profile].account
 
 	@property
 	def password( self ) -> str:
-		return self.config.active_profile.password
+		return self.config.profiles[self.config.profile].password
 
 	@property
 	def session( self ) -> SynoSession:
