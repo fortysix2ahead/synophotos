@@ -16,6 +16,9 @@ from synophotos.ui import dataclass_table
 from synophotos.webservice import SynoSession, WebService
 
 __version__ = '0.3.0-dev'
+__author__ = 'fortysix2ahead'
+__author_email__ = 'fortysix2ahead@gmail.com'
+__license__ = 'MIT'
 
 log = getLogger( __name__ )
 
