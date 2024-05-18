@@ -1,13 +1,11 @@
 """Synophotos - Synology Photos Command Line Interface"""
 
 from logging import DEBUG, INFO, WARNING, getLogger
-from sys import exit as sysexit
-from typing import Dict, Optional, Tuple, Type, TypeVar
+from typing import Dict, TypeVar
 
 from attrs import define, field
-from cattrs.preconf.pyyaml import make_converter
 from click import get_current_context
-from dynaconf import Dynaconf, loaders
+from dynaconf import Dynaconf
 from fs.appfs import UserConfigFS
 from fs.errors import ResourceNotFound
 from rich.logging import RichHandler
@@ -16,41 +14,29 @@ from synophotos.cache import Cache, dumps as dump_cache, loads as load_cache
 from synophotos.ui import dataclass_table
 from synophotos.webservice import SynoSession, WebService
 
+log = getLogger( __name__ )
+
+T = TypeVar('T')
+
 __version__ = '0.3.0-dev'
 __author__ = 'fortysix2ahead'
 __author_email__ = 'fortysix2ahead@gmail.com'
 __license__ = 'MIT'
 
-log = getLogger( __name__ )
-
-T = TypeVar('T')
-
 APPNAME = 'synophotos'
-
-CFG_FS = UserConfigFS( APPNAME, roaming=True, create=True )
-
+APP_PKG_NAME = 'synophotos'
 CONFIG_FILE = 'config.yaml'
 SESSIONS_FILE = 'sessions.yaml'
 CACHE_FILE = 'cache.yaml'
+SAMPLE_SETTINGS_FILE = 'settings-sample.yaml'
 SETTINGS_FILE = 'settings.yaml'
 
-DEFAULT_CONFIG = {
-	'profile': 'sample_profile',
-	'profiles': {
-		'sample_profile': {
-			'url': 'https://synology.photos.sample.server.example.com',
-			'account': 'sample_account',
-			'password': 'sample_password',
-		}
-	}
-}
+CFG_FS = UserConfigFS( APPNAME, roaming=True, create=True )
 
-settings: Dynaconf = Dynaconf( envvar_prefix = 'SYNOPHOTOS', root_path = CFG_FS.getsyspath( '/' ), settings_files = [ CONFIG_FILE, SETTINGS_FILE ], merge_enabled=True )
-cache: Dynaconf = Dynaconf( root_path = CFG_FS.getsyspath( '/' ), settings_files = [ CACHE_FILE ] )
+SETTINGS: Dynaconf = Dynaconf( envvar_prefix = 'SYNOPHOTOS', root_path = CFG_FS.getsyspath( '/' ), settings_files = [ CONFIG_FILE, SETTINGS_FILE ], merge_enabled=True )
+CACHE: Dynaconf = Dynaconf( root_path = CFG_FS.getsyspath( '/' ), settings_files = [ CACHE_FILE ] )
 
-CONVERTER = make_converter()
-
-# logging
+# logging setup
 
 DISABLE = 100
 DEFAULT_HANDLER = RichHandler( level=WARNING, show_time=False, show_level=False, markup=True )
@@ -71,7 +57,7 @@ class Profile:
 @define
 class ApplicationContext:
 
-	config: Dynaconf = field( default=settings )
+	config: Dynaconf = field( default=SETTINGS )
 	sessions: Dict[str, SynoSession] = field( factory=dict )
 	cache: Cache = field( default=None )
 
@@ -87,7 +73,7 @@ class ApplicationContext:
 		# pprint( inspect_settings( settings ) )
 
 		self.__configure_log__()
-		self.cache = Cache( source=cache )
+		self.cache = Cache( source=CACHE )
 
 	def __configure_log__( self ):
 		global DEFAULT_HANDLER, VERBOSE_HANDLER, DEBUG_HANDLER
