@@ -23,7 +23,7 @@ no_login_commands = [ 'init', 'profile', 'version' ]
 @option( '-v', '--verbose', is_flag=True, required=False, default=False, help='outputs verbose log information' )
 @pass_context
 def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
-	ctx.obj = ApplicationContext( verbose=verbose, debug=debug, force=force )
+	ctx.obj = ApplicationContext( __kwargs__={ 'verbose': verbose, 'debug': debug, 'force': force } )
 	ctx.call_on_close( teardown )
 
 	if 'profile' in ctx.obj.config and ctx.obj.config.profile is not None:
@@ -277,7 +277,7 @@ def sync( ctx: ApplicationContext, albums: Tuple[str], destination: str, use_cac
 		return
 
 	msg = ( 'Sync: [green]{} additions[/green], [yellow]{} updates[/yellow], [red]{} removals[/red] and [blue]{} skips[/blue], continue?'.format( *result.lengths() ) )
-	if not confirm( msg, ctx.force ):
+	if not confirm( msg, ctx.config.force ):
 		return
 
 	for i, a in [ *result.additions, *result.updates ]:
