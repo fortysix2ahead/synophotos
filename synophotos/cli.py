@@ -26,7 +26,7 @@ def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
 	ctx.obj = ApplicationContext( verbose=verbose, debug=debug, force=force )
 	ctx.call_on_close( teardown )
 
-	if 'profile' in ctx.obj.config:
+	if 'profile' in ctx.obj.config and ctx.obj.config.profile is not None:
 		# create (global) service (to ease login) and add to context
 		global synophotos
 		synophotos = SynoPhotos( url=ctx.obj.url, account=ctx.obj.account, password=ctx.obj.password, session=ctx.obj.session )
