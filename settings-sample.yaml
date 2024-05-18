@@ -1,0 +1,8 @@
+
+profile: "sample"
+
+profiles:
+  sample:
+    url: "https://synology.photos.sample.server.example.com"
+    account: "sample_account"
+    password: "sample_password"

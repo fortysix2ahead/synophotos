@@ -1,4 +1,5 @@
 from dataclasses import fields
+from sys import exit
 from typing import Any, List, Optional, Type
 
 from attrs import fields
@@ -33,6 +34,9 @@ def print_obj( obj: Any ) -> None:
 def print_error( msg: str ):
 	cs.print( f'[red]Error:[/red] {msg}' )
 
+def print_error_and_exit( msg: str ):
+	print_error( msg )
+	exit( -1 )
 #
 
 def obj_table( obj: Any ) -> Table:

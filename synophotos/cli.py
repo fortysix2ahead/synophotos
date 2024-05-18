@@ -1,15 +1,15 @@
+from importlib.resources import path as pkg_path
 from logging import getLogger
-from sys import exit as sysexit
+from pathlib import Path
 from typing import Optional, Tuple, cast
 
 from click import Context, argument, group, option, pass_context, pass_obj
 from fs.osfs import OSFS
-from yaml import safe_dump
 
 from synophotos import ApplicationContext, __version__, teardown
 from synophotos.fsio import prepare_sync_albums, remove_item, write_item
 from synophotos.photos import SynoPhotos, ThumbnailSize
-from synophotos.ui import confirm, pprint, pprint as pp, print_error, print_obj, print_obj_table, table_for
+from synophotos.ui import confirm, pprint, pprint as pp, print_error, print_error_and_exit, print_obj, print_obj_table, table_for
 
 log = getLogger( __name__ )
 
@@ -24,10 +24,9 @@ no_login_commands = [ 'init', 'profile', 'version' ]
 @pass_context
 def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
 	ctx.obj = ApplicationContext( verbose=verbose, debug=debug, force=force )
-
 	ctx.call_on_close( teardown )
 
-	if ctx.obj.config.active_profile:
+	if 'profile' in ctx.obj.config:
 		# create (global) service (to ease login) and add to context
 		global synophotos
 		synophotos = SynoPhotos( url=ctx.obj.url, account=ctx.obj.account, password=ctx.obj.password, session=ctx.obj.session )
@@ -40,20 +39,19 @@ def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
 		if not ctx.invoked_subcommand in no_login_commands:
 			if not synophotos.login( ctx.obj ):
 				#ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
-				print_error( 'failed to log in' )
-				sysexit( -1 )
+				print_error_and_exit( 'failed to log in' )
 
 @cli.command( help='initializes the application' )
 @pass_obj
 def init( ctx: ApplicationContext ):
-	from synophotos import CFG_FS as fs, CONFIG_FILE, DEFAULT_CONFIG
-	if not fs.exists( CONFIG_FILE ):
-		fs.writetext( CONFIG_FILE, safe_dump( DEFAULT_CONFIG ) )
-		config_path = fs.getsyspath( f'{CONFIG_FILE}' )
-		pp( f'Sample configuration has been created in \"{config_path}\"' )
-		pp( f'[bold]Important:[/bold] edit this file immediately as any subsequent commands will fail as synophotos will try to contact a non-existing server' )
-	else:
-		log.info( f'Skipping initialization as configuration file already exist' )
+	from synophotos import APP_PKG_NAME, CFG_FS as fs, CONFIG_FILE, SAMPLE_SETTINGS_FILE
+	with pkg_path( APP_PKG_NAME, f'__init__.py' ) as path:
+		if not fs.exists( CONFIG_FILE ):
+			fs.writetext( CONFIG_FILE, Path( path.parent.parent, SAMPLE_SETTINGS_FILE ).read_text( encoding='UTF-8' ) )
+			pp( f'Sample configuration has been created in \"{fs.getsyspath( f"{CONFIG_FILE}" )}\"' )
+			pp( f'[bold]Important:[/bold] edit this file immediately as any subsequent commands will fail as synophotos will try to contact a non-existing server' )
+		else:
+			log.info( f'Skipping initialization as configuration file already exist' )
 
 # create
 
