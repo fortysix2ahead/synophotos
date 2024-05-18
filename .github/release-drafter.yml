@@ -13,12 +13,13 @@ categories:
   - title: 'Other'
     labels:
       - 'chore'
-      - 'dependencies'
       - 'development'
-      - 'other'
-      - 'misc'
-      - 'doc'
       - 'documentation'
+      - 'misc'
+      - 'other'
+  - title: 'Dependencies'
+    labels:
+      - 'dependencies'
 exclude-labels:
   - 'skip'
   - 'nolog'
