@@ -7,6 +7,7 @@ from typing import Dict, Optional, Type, TypeVar
 from attrs import define, field
 from cattrs.preconf.pyyaml import make_converter
 from click import get_current_context
+from dynaconf import Dynaconf
 from fs.appfs import UserConfigFS
 from fs.errors import ResourceNotFound
 from rich.logging import RichHandler
@@ -44,6 +45,12 @@ DEFAULT_CONFIG = {
 	}
 }
 
+settings: Dynaconf = Dynaconf(
+	envvar_prefix = 'SYNOPHOTOS',
+	root_path = None,
+	settings_files = [ CONFIG_FILE ],
+)
+
 CONVERTER = make_converter()
 
 # logging
@@ -65,25 +72,9 @@ class Profile:
 	password: str = field( default=None )
 
 @define
-class Config:
-
-	debug: bool = field( default=False )
-	force: bool = field( default=False )
-	verbose: bool = field( default=False )
-
-	cache: bool = field( default=False ) # turn off by default, at least for now
-
-	profile: str = field( default=None )
-	profiles: Dict[str, Profile] = field( factory=dict )
-
-	@property
-	def active_profile( self ) -> Optional[Profile]:
-		return self.profiles.get( self.profile )
-
-@define
 class ApplicationContext:
 
-	config: Config = field( factory=Config )
+	config: Dynaconf = field( default=settings )
 	sessions: Dict[str, SynoSession] = field( factory=dict )
 	cache: Cache = field( factory=Cache )
 
