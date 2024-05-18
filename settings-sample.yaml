@@ -1,5 +1,8 @@
 
+debug: false
+force: false
 profile: "sample"
+verbose: false
 
 profiles:
   sample:

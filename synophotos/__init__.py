@@ -61,28 +61,27 @@ class ApplicationContext:
 	sessions: Dict[str, SynoSession] = field( factory=dict )
 	cache: Cache = field( default=None )
 
-	debug: bool = field( default=False )
-	force: bool = field( default=False )
-	verbose: bool = field( default=False )
-
 	service: WebService = field( default=None )
+
+	__kwargs__: Dict = field( factory=dict, alias='__kwargs__' )
 
 	def __attrs_post_init__( self ):
 		# from dynaconf import inspect_settings
 		# from rich.pretty import pprint
 		# pprint( inspect_settings( settings ) )
 
+		self.config.update( **self.__kwargs__ )
 		self.__configure_log__()
 		self.cache = Cache( source=CACHE )
 
 	def __configure_log__( self ):
 		global DEFAULT_HANDLER, VERBOSE_HANDLER, DEBUG_HANDLER
-		if self.debug:
+		if self.config.debug:
 			DEBUG_HANDLER.setLevel( DEBUG )
 			VERBOSE_HANDLER.setLevel( DISABLE )
 			DEFAULT_HANDLER.setLevel( DISABLE )
 			log.setLevel( DEBUG )
-		elif self.verbose:
+		elif self.config.verbose:
 			DEBUG_HANDLER.setLevel( DISABLE )
 			VERBOSE_HANDLER.setLevel( INFO )
 			DEFAULT_HANDLER.setLevel( DISABLE )
