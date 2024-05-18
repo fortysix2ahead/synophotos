@@ -7,16 +7,15 @@ from typing import Dict, Optional, Type, TypeVar
 from attrs import define, field
 from cattrs.preconf.pyyaml import make_converter
 from click import get_current_context
+from fs.appfs import UserConfigFS
 from fs.errors import ResourceNotFound
-from fs.osfs import OSFS
-from platformdirs import user_config_dir
 from rich.logging import RichHandler
 
 from synophotos.cache import Cache, dumps as dump_cache, loads as load_cache
 from synophotos.ui import dataclass_table
 from synophotos.webservice import SynoSession, WebService
 
-__version__ = '0.2.3'
+__version__ = '0.3.0-dev'
 
 log = getLogger( __name__ )
 
@@ -24,8 +23,8 @@ T = TypeVar('T')
 
 APPNAME = 'synophotos'
 
-CFG_DIR = user_config_dir( appname=APPNAME, roaming=True )
-CFG_FS = OSFS( root_path=CFG_DIR, create=True, expand_vars=True )
+CFG_FS = UserConfigFS( APPNAME, roaming=True, create=True )
+CFG_DIR = CFG_FS.getospath( '/' ) # can be removed later
 
 CONFIG_FILE = 'config.yaml'
 SESSIONS_FILE = 'sessions.yaml'
@@ -159,4 +158,3 @@ class ApplicationContext:
 def teardown():
 	ctx = get_current_context().obj
 	ctx.save_config_files()
-
