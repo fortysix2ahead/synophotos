@@ -1,11 +1,12 @@
 """Synophotos - Synology Photos Command Line Interface"""
 
 from logging import DEBUG, INFO, WARNING, getLogger
-from typing import Dict, TypeVar
+from typing import Dict, Optional, TypeVar
 
 from attrs import define, field
 from click import get_current_context
 from dynaconf import Dynaconf
+from dynaconf.vendor.box.exceptions import BoxKeyError
 from fs.appfs import UserConfigFS
 from fs.errors import ResourceNotFound
 from rich.logging import RichHandler
@@ -68,7 +69,7 @@ class ApplicationContext:
 	def __attrs_post_init__( self ):
 		# from dynaconf import inspect_settings
 		# from rich.pretty import pprint
-		# pprint( inspect_settings( settings ) )
+		# pprint( inspect_settings( SETTINGS ) )
 
 		self.config.update( **self.__kwargs__ )
 		self.__configure_log__()
@@ -97,6 +98,14 @@ class ApplicationContext:
 				CFG_FS.writetext( CACHE_FILE, dump_cache( self.cache ), 'UTF-8' )
 			except ResourceNotFound:
 				log.error( f'unable to write file {CACHE_FILE}', exc_info=True )
+
+	@property
+	def profile( self ) -> Optional[Profile]:
+		try:
+			p = self.config.profiles[self.config.profile]
+			return Profile( url=p.url, account=p.account, password=p.password )
+		except BoxKeyError:
+			return None
 
 	@property
 	def url( self ) -> str:
