@@ -3,7 +3,9 @@ from logging import getLogger
 from pathlib import Path
 from typing import Optional, Tuple, cast
 
+from attrs import asdict
 from click import Context, argument, group, option, pass_context, pass_obj
+from dynaconf.vendor.box.exceptions import BoxKeyError
 from fs.osfs import OSFS
 
 from synophotos import ApplicationContext, __version__, teardown
@@ -15,31 +17,38 @@ log = getLogger( __name__ )
 
 synophotos: Optional[SynoPhotos] = None  # global variable for functions below
 
-no_login_commands = [ 'init', 'profile', 'version' ]
+no_login_commands = [ 'init', 'profile', 'profiles', 'version' ]
 
 @group
-@option( '-d', '--debug', is_flag=True, required=False, default=False, help='outputs debug information (implies --verbose)' )
-@option( '-f', '--force', is_flag=True, required=False, default=False, help='forces the execution of commands and skips confirmation dialogs' )
-@option( '-v', '--verbose', is_flag=True, required=False, default=False, help='outputs verbose log information' )
+@option( '-d', '--debug', is_flag=True, required=False, default=None, help='outputs debug information (implies --verbose)' )
+@option( '-f', '--force', is_flag=True, required=False, default=None, help='forces the execution of commands and skips confirmation dialogs' )
+@option( '-p', '--profile', required=False, help='select a profile to be used for command' )
+@option( '-v', '--verbose', is_flag=True, required=False, default=None, help='outputs verbose log information' )
 @pass_context
-def cli( ctx: Context, debug: bool, force: bool, verbose: bool ):
-	ctx.obj = ApplicationContext( __kwargs__={ 'verbose': verbose, 'debug': debug, 'force': force } )
+# def cli( ctx: Context, debug: bool, force: bool, profile: str, verbose: bool ):
+def cli( ctx: Context, **kwargs ):
+	ctx.obj = ApplicationContext( __kwargs__={ k: v for k, v in kwargs.items() if v is not None } )
 	ctx.call_on_close( teardown )
 
-	if 'profile' in ctx.obj.config and ctx.obj.config.profile is not None:
-		# create (global) service (to ease login) and add to context
-		global synophotos
-		synophotos = SynoPhotos( url=ctx.obj.url, account=ctx.obj.account, password=ctx.obj.password, session=ctx.obj.session )
-		if ctx.obj.config.cache:
-			synophotos.enable_cache( ctx.obj.cache )
+	if ( p := ctx.obj.config.get( 'profile' ) ) not in ctx.obj.config.get( 'profiles', {} ).keys():
+		print_error_and_exit( f'profile [green]{p}[/green] does not exist or is improperly configured' )
 
-		ctx.obj.service = synophotos
+	if not ctx.invoked_subcommand in no_login_commands:
+		try:
+			global synophotos # create (global) service (to ease login) and add to context
+			synophotos = SynoPhotos( **{ **asdict( ctx.obj.profile ), 'session': ctx.obj.session } )
+			if ctx.obj.config.cache:
+				synophotos.enable_cache( ctx.obj.cache )
 
-		# attempt to log in
-		if not ctx.invoked_subcommand in no_login_commands:
-			if not synophotos.login( ctx.obj ):
-				#ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
-				print_error_and_exit( 'failed to log in' )
+			ctx.obj.service = synophotos
+			if not synophotos.login( ctx.obj ): # attempt to log in
+				# ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
+				# todo: improve error message
+				print_error_and_exit( f'error logging in' )
+
+		except ( AttributeError, BoxKeyError, TypeError ):
+			# todo: improve error message
+			print_error_and_exit( 'unable to create/connect to Synology Photos - configuration error?' )
 
 @cli.command( help='initializes the application' )
 @pass_obj
@@ -311,8 +320,16 @@ def version( ctx: ApplicationContext ):
 @cli.command( 'profile', help='shows the name of the currently active profile' )
 @pass_obj
 def profile( ctx: ApplicationContext ):
-	pn, p = ctx.config.profile, ctx.config.profiles.get( ctx.config.profile )
-	pp( f'{pn} ( {p.account} at {p.url} )' )
+	try:
+		pn, p = ctx.config.profile, ctx.config.profiles.get( ctx.config.profile )
+		pp( f'{pn} ( {p.account}@{p.url} )' )
+	except AttributeError:
+		print_error( f'unable to display profile information for profile [green]{ctx.config.profile}[/green], profile does not exist or is improperly configured' )
+
+@cli.command( 'profiles', help='shows all available profiles' )
+@pass_obj
+def profiles( ctx: ApplicationContext ):
+		[ print( p ) for p in ctx.config.get( 'profiles', {} ) ]
 
 def _ws( ctx: ApplicationContext ) -> SynoPhotos:
 	return cast( SynoPhotos, ctx.service )
