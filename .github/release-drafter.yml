@@ -13,6 +13,8 @@ categories:
   - title: 'Other'
     labels:
       - 'chore'
+      - 'dependencies'
+      - 'development'
       - 'other'
       - 'misc'
       - 'doc'
