@@ -88,6 +88,14 @@ class SynoResponse:
 	def url( self ) -> str:
 		return self.response.request.url
 
+	@property
+	def mfa_requested( self ) -> bool:
+		return self.error_code == 403
+
+	@property
+	def unauthorized( self ) -> bool:
+		return not self.success and self.error_code == 119
+
 	def as_bytes( self ) -> bytes:
 		return self.response.content
 
@@ -215,20 +223,28 @@ class SynoWebService:
 		_log_response( response )
 
 		# when not authenticated, Synology answers with error code 119, so attempt to login and retry
-		if attempt_login and not response.success and response.error_code == 119:
-			log.info( 'session might be outdated or not existing, attempting to login' )
+		if attempt_login and response.unauthorized:
+			log.info( f'session for user [green]{self.account}[/green] seems be outdated or does not exist, attempting to login' )
 
 			login_params = LOGIN_PARAMS | { 'account': self.account, 'passwd': self.password }
-			otp_code = False # for development
-			if otp_code:
-				login_params = login_params | { 'otp_code': otp_code }
+			login_response = self.req( get, url, LOGIN_PARAMS, attempt_login=False, **login_params ) # set attempt_login=False to prevent endless loop!
+			# do not log this request as it will be logged when calling req()
+			# _log_response( login_response )
 
-			login_response = self.req( get, url, LOGIN_PARAMS, attempt_login=False, **login_params ) # set attempt_login=False to prevent endless loops!
-			# _log_response( login_response ) # do not log this request as it will be logged when calling req()
+			# login failed again
+			if login_response.success:
+				log.info( f'login for user [green]{self.account}[/green] successful' )
+			else:
+				if login_response.mfa_requested:
+					log.info( f'login for user [green]{self.account}[/green] failed, 2FA seems to be enabled' )
+					otp_token = Prompt.ask( 'Multi-factor authentication seems to be enabled, please enter code' )
+					login_params = login_params | { 'otp_token': otp_token }
+					login_response = self.req( get, url, LOGIN_PARAMS, attempt_login=False, **login_params )  # set attempt_login=False to prevent endless loop!
 
-			# login failed again, so give up
-			if not login_response.success:
-				return login_response
+				# login finally failed, give up
+				if not login_response.success:
+					print_error( f'login for user [green]{self.account}[/green] failed, giving up ...' )
+					return login_response
 
 			# update parameters with sid and try again
 			params = params | SID | { '_sid': login_response.data.get( 'sid' ) }
@@ -284,14 +300,15 @@ class SynoWebService:
 # helpers
 
 def _log_request( fn: Callable, url: str, params: Dict ) -> None:
-	log.debug( f'[dark_orange]{fn.__name__.upper()}[/dark_orange] {url}' )
-	log.debug( f'[dark_orange]Parameters:[/dark_orange] {pretty_repr( params )}' )
+	#log.debug( f'[dark_orange]{fn.__name__.upper()}[/dark_orange] {url}' )
+	#log.debug( f'[dark_orange]Parameters:[/dark_orange] {pretty_repr( params )}' )
+	log.debug( f'[dark_orange]{fn.__name__.upper()}[/dark_orange] {url}: {pretty_repr( params )}' )
 
 def _log_response( response: SynoResponse ) -> None:
 	log.info( f'answer to request [green]{response.method} {response.short_url}[/green]: {response.error_code} - {response.error_msg}' )
 
-	log.debug( f'[dark_orange]Response:[/dark_orange] {response.status_code}' )
+	response_str = f'[dark_orange]Response code:[/dark_orange] {response.status_code}'
 	try:
-		log.debug( f'[dark_orange]Payload:[/dark_orange] {pretty_repr( response.response.json(), max_depth=6 )}' )
+		log.debug( f'{response_str}, [dark_orange]payload:[/dark_orange] {pretty_repr( response.response.json(), max_depth=6 )}' )
 	except JSONDecodeError:
 		log.debug( f'[dark_orange]Payload:[/dark_orange] <binary> length={len( response.response.content )}' )
