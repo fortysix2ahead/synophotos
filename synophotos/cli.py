@@ -25,30 +25,32 @@ no_login_commands = [ 'init', 'logout', 'profile', 'profiles', 'version' ]
 @option( '-p', '--profile', required=False, help='select a profile to be used for command' )
 @option( '-v', '--verbose', is_flag=True, required=False, default=None, help='outputs verbose log information' )
 @pass_context
-# def cli( ctx: Context, debug: bool, force: bool, profile: str, verbose: bool ):
 def cli( ctx: Context, **kwargs ):
 	ctx.obj = ApplicationContext( __kwargs__={ k: v for k, v in kwargs.items() if v is not None } )
 	ctx.call_on_close( teardown )
 
-	if ( p := ctx.obj.config.get( 'profile' ) ) not in ctx.obj.config.get( 'profiles', {} ).keys():
-		print_error_and_exit( f'profile [green]{p}[/green] does not exist or is improperly configured' )
+	profile_name = ctx.obj.config.get( 'profile' )
+	log.info( f'using profile [green]{profile_name}[/green]' )
 
-	if not ctx.invoked_subcommand in no_login_commands:
-		try:
-			global synophotos # create (global) service (to ease login) and add to context
-			synophotos = SynoPhotos( **{ **asdict( ctx.obj.profile ), 'session': ctx.obj.session } )
-			if ctx.obj.config.cache:
-				synophotos.enable_cache( ctx.obj.cache )
+	if profile_name not in ctx.obj.config.get( 'profiles', {} ).keys():
+		print_error_and_exit( f'profile [green]{profile_name}[/green] does not exist in configured list of profiles' )
 
-			ctx.obj.service = synophotos
-			if not synophotos.login( ctx.obj ): # attempt to log in
-				# ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
-				# todo: improve error message
-				print_error_and_exit( f'error logging in' )
+	# if not ctx.invoked_subcommand in no_login_commands:
+	try:
+		global synophotos # create (global) service (to ease login) and add to context
+		synophotos = SynoPhotos( **{ **asdict( ctx.obj.profile ), 'session': ctx.obj.session } )
+		if ctx.obj.config.cache:
+			synophotos.enable_cache( ctx.obj.cache )
 
-		except ( AttributeError, BoxKeyError, TypeError ):
+		ctx.obj.service = synophotos
+#			if not synophotos.login( ctx.obj ): # attempt to log in
+			# ctx.obj.console.print( f'error logging in code={syno_session.error_code}, msg={syno_session.error_msg}' )
 			# todo: improve error message
-			print_error_and_exit( 'unable to create/connect to Synology Photos - configuration error?' )
+#				print_error_and_exit( f'error logging in' )
+
+	except ( AttributeError, BoxKeyError, TypeError ):
+		# todo: improve error message
+		print_error_and_exit( 'unable to create/connect to Synology Photos - configuration error?' )
 
 @cli.command( help='initializes the application' )
 @pass_obj

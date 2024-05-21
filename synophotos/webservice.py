@@ -72,6 +72,22 @@ class SynoResponse:
 		except JSONDecodeError:
 			self.success = True if self.status_code in range( 200, 300 ) else False
 
+	@property
+	def method( self ) -> str:
+		return self.response.request.method
+
+	@property
+	def path_url( self ) -> str:
+		return self.response.request.path_url
+
+	@property
+	def short_url( self ) -> str:
+		return self.response.request.path_url.split( '&' )[0]
+
+	@property
+	def url( self ) -> str:
+		return self.response.request.url
+
 	def as_bytes( self ) -> bytes:
 		return self.response.content
 
@@ -184,7 +200,7 @@ class SynoWebService:
 	def entry( self, payload: Dict, **kwargs ) -> SynoResponse:
 		return self.get( ENTRY_URL, payload, **kwargs )
 
-	def req( self, fn: Callable, url: str, template: Dict, **kwargs ) -> SynoResponse:
+	def req( self, fn: Callable, url: str, template: Dict, attempt_login: bool = True, **kwargs ) -> SynoResponse:
 		url = self.get_url( url )
 		if self.session_id:
 			template = template | SID | { '_sid': self.session_id }
@@ -192,18 +208,35 @@ class SynoWebService:
 		params = template | kwargs  # create variable making debugging easier
 		params = { k: v for k, v in params.items() if v is not None } # throw away all None values
 
-		log.debug( f'[dark_orange]{fn.__name__.upper()}[/dark_orange] {url}' )
-		log.debug( f'[dark_orange]Parameters:[/dark_orange] {pretty_repr( params )}' )
+		_log_request( fn, url, params )
 
-		response: Response = fn( url=url, params=params, verify=True )
+		# try to send request
+		response = SynoResponse( response=fn( url=url, params=params, verify=True ) )
+		_log_response( response )
 
-		log.debug( f'[dark_orange]Response:[/dark_orange] {response.status_code}' )
-		try:
-			log.debug( f'[dark_orange]Payload:[/dark_orange] {pretty_repr( response.json(), max_depth=6 )}' )
-		except JSONDecodeError:
-			log.debug( f'[dark_orange]Payload:[/dark_orange] <binary> length={len( response.content )}' )
+		# when not authenticated, Synology answers with error code 119, so attempt to login and retry
+		if attempt_login and not response.success and response.error_code == 119:
+			log.info( 'session might be outdated or not existing, attempting to login' )
 
-		return SynoResponse( response=response )
+			login_params = LOGIN_PARAMS | { 'account': self.account, 'passwd': self.password }
+			otp_code = False # for development
+			if otp_code:
+				login_params = login_params | { 'otp_code': otp_code }
+
+			login_response = self.req( get, url, LOGIN_PARAMS, attempt_login=False, **login_params ) # set attempt_login=False to prevent endless loops!
+			# _log_response( login_response ) # do not log this request as it will be logged when calling req()
+
+			# login failed again, so give up
+			if not login_response.success:
+				return login_response
+
+			# update parameters with sid and try again
+			params = params | SID | { '_sid': login_response.data.get( 'sid' ) }
+			retry_response = SynoResponse( response=fn( url=url, params=params, verify=True ) )
+			_log_response( retry_response )
+			return retry_response
+
+		return response
 
 	def get( self, url: str, template: Dict, **kwargs ) -> SynoResponse:
 		return self.req( get, url, template, **kwargs )
@@ -247,3 +280,18 @@ class SynoWebService:
 			return conv.structure_attrs_fromdict( {**syno_response.data, 'updated_at': datetime.utcnow().isoformat()}, SynoSession )
 		else:
 			return conv.structure_attrs_fromdict( {'error_code': syno_response.error_code, 'error_msg': syno_response.error_msg}, SynoSession )
+
+# helpers
+
+def _log_request( fn: Callable, url: str, params: Dict ) -> None:
+	log.debug( f'[dark_orange]{fn.__name__.upper()}[/dark_orange] {url}' )
+	log.debug( f'[dark_orange]Parameters:[/dark_orange] {pretty_repr( params )}' )
+
+def _log_response( response: SynoResponse ) -> None:
+	log.info( f'answer to request [green]{response.method} {response.short_url}[/green]: {response.error_code} - {response.error_msg}' )
+
+	log.debug( f'[dark_orange]Response:[/dark_orange] {response.status_code}' )
+	try:
+		log.debug( f'[dark_orange]Payload:[/dark_orange] {pretty_repr( response.response.json(), max_depth=6 )}' )
+	except JSONDecodeError:
+		log.debug( f'[dark_orange]Payload:[/dark_orange] <binary> length={len( response.response.content )}' )
