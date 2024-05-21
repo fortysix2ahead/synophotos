@@ -17,7 +17,7 @@ log = getLogger( __name__ )
 
 synophotos: Optional[SynoPhotos] = None  # global variable for functions below
 
-no_login_commands = [ 'init', 'login', 'logout', 'profile', 'profiles', 'version' ]
+no_login_commands = [ 'init', 'logout', 'profile', 'profiles', 'version' ]
 
 @group
 @option( '-d', '--debug', is_flag=True, required=False, default=None, help='outputs debug information (implies --verbose)' )
@@ -299,8 +299,7 @@ def sync( ctx: ApplicationContext, albums: Tuple[str], destination: str, use_cac
 @cli.command( hidden=True, help='logs in and prints the session data (this is for development only)' )
 @pass_obj
 def login( ctx: ApplicationContext ):
-	synophotos = SynoPhotos( **{**asdict( ctx.profile ), 'session': ctx.session} )
-	pp( synophotos.login( ctx ) )
+	pass
 
 @cli.command( hidden=True, help='performs a logout (this is for development only)' )
 @pass_obj

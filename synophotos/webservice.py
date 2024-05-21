@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 from abc import abstractmethod
 from datetime import datetime, timedelta
 from logging import getLogger
 from sys import exit as sysexit
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
+from typing import Any, Callable, ClassVar, Dict, List, Optional, Type, TypeVar
 
 from attrs import define, field
 from cattrs import Converter
+from cattrs.preconf.pyyaml import make_converter
 from requests import JSONDecodeError, PreparedRequest, Response, get, post
 from rich.pretty import pretty_repr
 from rich.prompt import Prompt
@@ -16,11 +19,13 @@ from synophotos.error_codes import CODE_SUCCESS, CODE_UNKNOWN, error_codes
 from synophotos.parameters.photos import SID
 from synophotos.parameters.webservice import ENTRY_URL, LOGIN_PARAMS
 from synophotos.ui import print_error
+from synophotos.utils import lower_keys
 
 log = getLogger( __name__ )
 
 T = TypeVar( 'T' )
 SESSION_TIMEOUT = timedelta( days=30 )
+
 conv = Converter()
 
 class WebService( Protocol ):
@@ -124,6 +129,38 @@ class SynoSession:
 		return False
 
 @define
+class SynoSessions:
+
+	# cattrs converter
+	converter: ClassVar[Converter] = make_converter( omit_if_default=True )
+
+	# fields
+	sessions: Dict[str, SynoSession] = field( factory=dict )
+
+	@classmethod
+	def from_dict( cls, d: Dict ) -> SynoSessions:
+		return SynoSessions( sessions=SynoSessions.converter.structure( lower_keys( d ), Dict[str, SynoSession] ) )
+
+	@classmethod
+	def from_str( cls, s: str ) -> SynoSessions:
+		return SynoSessions( sessions=SynoSessions.converter.loads( s, Dict[str, SynoSession] ) )
+
+	def __getitem__( self, item ) -> Optional[SynoSession]:
+		return self.sessions.get( item )
+
+	def __setitem__( self, key: str, value: SynoSession ) -> None:
+		self.sessions[key] = value
+
+	def get( self, name: str ) -> Optional[SynoSession]:
+		return self[name]
+
+	def as_dict( self ) -> Dict:
+		return SynoSessions.converter.unstructure( self.sessions, Dict[str, SynoSession] )
+
+	def as_str( self ) -> str:
+		return SynoSessions.converter.dumps( self.sessions, Dict[str, SynoSession] )
+
+@define
 class SynoWebService:
 	url: str = field( default=None )
 	account: str = field( default=None )
@@ -197,11 +234,7 @@ class SynoWebService:
 				print_error( f'unable to log in: code={self.session.error_code}, msg={self.session.error_msg}' )
 				sysexit( -1 )
 
-		save_session = True  # todo: make this configurable?
-		#if save_session:
-		#	ctx.config.sessions[ctx.config.config.profile] = self.session
-		#	ctx.config.save_sessions()
-
+		ctx.sessions[ctx.config.profile] = self.session
 		return self.session
 
 	def _login( self, otp_code: str = None ) -> SynoSession:

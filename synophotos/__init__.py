@@ -13,7 +13,7 @@ from rich.logging import RichHandler
 
 from synophotos.cache import Cache, dumps as dump_cache, loads as load_cache
 from synophotos.ui import dataclass_table
-from synophotos.webservice import SynoSession, WebService
+from synophotos.webservice import SynoSession, SynoSessions, WebService
 
 log = getLogger( __name__ )
 
@@ -36,6 +36,7 @@ CFG_FS = UserConfigFS( APPNAME, roaming=True, create=True )
 
 SETTINGS: Dynaconf = Dynaconf( envvar_prefix = 'SYNOPHOTOS', root_path = CFG_FS.getsyspath( '/' ), settings_files = [ CONFIG_FILE, SETTINGS_FILE ], merge_enabled=True )
 CACHE: Dynaconf = Dynaconf( root_path = CFG_FS.getsyspath( '/' ), settings_files = [ CACHE_FILE ] )
+SESSIONS: Dynaconf = Dynaconf( root_path = CFG_FS.getsyspath( '/' ), settings_files = [ SESSIONS_FILE ] )
 
 # logging setup
 
@@ -59,7 +60,7 @@ class Profile:
 class ApplicationContext:
 
 	config: Dynaconf = field( default=SETTINGS )
-	sessions: Dict[str, SynoSession] = field( factory=dict )
+	sessions: SynoSessions = field( factory=SynoSessions )
 	cache: Cache = field( default=None )
 
 	service: WebService = field( default=None )
@@ -73,6 +74,13 @@ class ApplicationContext:
 
 		self.config.update( **self.__kwargs__ )
 		self.__configure_log__()
+
+		try:
+			self.sessions = SynoSessions.from_str( CFG_FS.readtext( SESSIONS_FILE, 'UTF-8' ) )
+			log.debug( f'read {len( self.sessions.sessions)} sessions file from {CFG_FS.getsyspath( SESSIONS_FILE )}' )
+		except ResourceNotFound:
+			log.error( f'unable to read sessions file from {CFG_FS.getsyspath( SESSIONS_FILE )}' )
+
 		self.cache = Cache( source=CACHE )
 
 	def __configure_log__( self ):
@@ -98,6 +106,11 @@ class ApplicationContext:
 				CFG_FS.writetext( CACHE_FILE, dump_cache( self.cache ), 'UTF-8' )
 			except ResourceNotFound:
 				log.error( f'unable to write file {CACHE_FILE}', exc_info=True )
+
+			try:
+				CFG_FS.writetext( SESSIONS_FILE, self.sessions.as_str(), 'UTF-8' )
+			except ResourceNotFound:
+				log.error( f'unable to write sessions file {SESSIONS_FILE}', exc_info=True )
 
 	@property
 	def profile( self ) -> Optional[Profile]:
