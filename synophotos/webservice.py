@@ -244,12 +244,7 @@ class SynoWebService:
 			# do not log this request as it will be logged when calling req()
 			# _log_response( login_response )
 
-			# login failed again
-			if login_response.success:
-				log.info( f'login for user [green]{self.account}[/green] successful' )
-				self.session = SynoSession( **login_response.as_data(), updated_at=datetime.utcnow().isoformat() )
-
-			else:
+			if not login_response.success:
 				if login_response.mfa_requested:
 					log.info( f'login for user [green]{self.account}[/green] failed, 2FA seems to be enabled' )
 					otp_code = Prompt.ask( 'Multi-factor authentication seems to be enabled, please enter code' )
@@ -260,10 +255,13 @@ class SynoWebService:
 						log.info( f'login using MFA for user [green]{self.account}[/green] successful' )
 						self.session = SynoSession( **login_response.as_data(), updated_at=datetime.utcnow().isoformat() )
 
-				# login finally failed, give up
-				if not login_response.success:
-					print_error( f'login for user [green]{self.account}[/green] failed, giving up ...' )
-					return login_response
+			if login_response.success: # login successful
+				log.info( f'login for user [green]{self.account}[/green] successful' )
+				self.session = SynoSession( **login_response.as_data(), updated_at=datetime.utcnow().isoformat() )
+
+			else: # login finally failed: give up
+				print_error( f'login for user [green]{self.account}[/green] failed, giving up ...' )
+				return login_response
 
 			# update parameters with sid and try again
 			params = params | SID | { '_sid': login_response.data.get( 'sid' ) }
@@ -281,40 +279,6 @@ class SynoWebService:
 
 	def get_url( self, stub: str ) -> str:
 		return stub.format( url=self.url )
-
-	def login( self, ctx, otp_code: str = None ) -> SynoSession:
-		# todo: check if saved session has been expired, but unclear how to detect that
-		if self.session and self.session.is_valid():
-			log.info( f'reusing session with SID = {self.session.sid}, created at {self.session.updated_at}' )
-			return self.session
-
-		self.session = self._login()
-		if not self.session.is_valid():
-			if self.session.error_code == 403:  # 2FA requested
-				otp_token = Prompt.ask( 'Service responded with HTTP 403, 2FA seems to be enabled, please enter 2FA code' )
-				self.session = self._login( otp_token )
-				if not self.session.is_valid():
-					print_error( f'unable to log in: code={self.session.error_code}, msg={self.session.error_msg}' )
-					sysexit( -1 )
-				else:
-					log.info( f'created new session with SID = {self.session.sid}' )
-			else:
-				print_error( f'unable to log in: code={self.session.error_code}, msg={self.session.error_msg}' )
-				sysexit( -1 )
-
-		ctx.sessions[ctx.config.profile] = self.session
-		return self.session
-
-	def _login( self, otp_code: str = None ) -> SynoSession:
-		if otp_code:
-			syno_response = self.get( ENTRY_URL, LOGIN_PARAMS, account=self.account, passwd=self.password, otp_code=otp_code )
-		else:
-			syno_response = self.get( ENTRY_URL, LOGIN_PARAMS, account=self.account, passwd=self.password )
-
-		if syno_response.success:
-			return conv.structure_attrs_fromdict( {**syno_response.data, 'updated_at': datetime.utcnow().isoformat()}, SynoSession )
-		else:
-			return conv.structure_attrs_fromdict( {'error_code': syno_response.error_code, 'error_msg': syno_response.error_msg}, SynoSession )
 
 # helpers
 
