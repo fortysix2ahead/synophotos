@@ -17,7 +17,7 @@ from typing_extensions import Protocol
 from synophotos import Cache
 from synophotos.error_codes import CODE_SUCCESS, CODE_UNKNOWN, error_codes
 from synophotos.parameters.photos import SID
-from synophotos.parameters.webservice import ENTRY_URL, LOGIN_PARAMS
+from synophotos.parameters.webservice import ENTRY_URL, LOGIN_PARAMS, LOGIN_MFA
 from synophotos.ui import print_error
 from synophotos.utils import lower_keys
 
@@ -93,6 +93,10 @@ class SynoResponse:
 		return self.error_code == 403
 
 	@property
+	def mfa_token( self ) -> str:
+		return self.error_code == 403
+
+	@property
 	def unauthorized( self ) -> bool:
 		return not self.success and self.error_code == 119
 
@@ -101,6 +105,16 @@ class SynoResponse:
 
 	def as_text( self ) -> str:
 		return self.response.text
+
+	def as_json( self ) -> Dict:
+		try:
+			return self.response.json()
+		except JSONDecodeError:
+			return {}
+
+	@property
+	def otp_token( self ) -> str:
+		return self.as_json().get( 'error', {} ).get( 'errors', {} ).get( 'token' )
 
 	def as_list( self, cls: Type[T] ) -> List[T]:
 		return [conv.structure( e, cls ) for e in self.as_dict_list()]
@@ -237,9 +251,9 @@ class SynoWebService:
 			else:
 				if login_response.mfa_requested:
 					log.info( f'login for user [green]{self.account}[/green] failed, 2FA seems to be enabled' )
-					otp_token = Prompt.ask( 'Multi-factor authentication seems to be enabled, please enter code' )
-					login_params = login_params | { 'otp_token': otp_token }
-					login_response = self.req( get, url, LOGIN_PARAMS, attempt_login=False, **login_params )  # set attempt_login=False to prevent endless loop!
+					otp_code = Prompt.ask( 'Multi-factor authentication seems to be enabled, please enter code' )
+					login_params = login_params | { 'passwd': login_response.otp_token, 'otp_code': otp_code }
+					login_response = self.req( get, url, LOGIN_MFA, attempt_login=False, **login_params )  # set attempt_login=False to prevent endless loop!
 
 				# login finally failed, give up
 				if not login_response.success:
