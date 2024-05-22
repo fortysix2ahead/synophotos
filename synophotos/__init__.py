@@ -137,5 +137,6 @@ class ApplicationContext:
 		return self.sessions.get( self.config.profile )
 
 def teardown():
-	ctx = get_current_context().obj
+	ctx: ApplicationContext = get_current_context().obj
+	ctx.sessions[ctx.config.profile] = ctx.service.session
 	ctx.save_config_files()
