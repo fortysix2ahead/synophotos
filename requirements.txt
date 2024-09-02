@@ -1,5 +1,5 @@
 attrs~=23.2.0
-cattrs~=23.2.3
+cattrs>=23.2.3,<24.2.0
 click~=8.1.7
 dynaconf~=3.2.5
 exif~=1.6.0
