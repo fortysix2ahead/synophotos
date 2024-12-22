@@ -1,4 +1,4 @@
-attrs~=24.2.0
+attrs>=24.2,<24.4
 bumpver~=2024.1130
 cattrs~=24.1.2
 click~=8.1.7
