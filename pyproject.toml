@@ -35,7 +35,7 @@ dev = [
   "mkdocs~=1.6.1",
   "mkdocs-click~=0.8.1",
   "mkdocs-material>=9.5.44,<9.7.0",
-  "setuptools>=75.5,<75.9"
+  "setuptools>=75.5,<80.8"
 ]
 
 [project.urls]
