@@ -1,6 +1,6 @@
 attrs>=24.2,<25.4
 bumpver~=2024.1130
-cattrs~=24.1.2
+cattrs>=24.1.2,<25.3.0
 click~=8.1.7
 dynaconf~=3.2.5
 exif~=1.6.0
